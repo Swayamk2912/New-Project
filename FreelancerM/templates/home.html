@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreelanceHub - Connect with Top Talent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .category-card { transition: all 0.3s ease; cursor: pointer; }
+        .category-card:hover { transform: scale(1.05); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .category-card:hover .category-icon { color: white; }
+        .scroll-smooth { scroll-behavior: smooth; }
+        .fade-in { animation: fadeIn 0.6s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px; background: #667eea; transition: width 0.3s ease; }
+        .nav-link:hover::after { width: 100%; }
+        .skill-tag { transition: all 0.2s ease; }
+        .skill-tag:hover { transform: scale(1.1); background: #667eea; color: white; }
+        .testimonial-card { transition: all 0.3s ease; }
+        .testimonial-card:hover { transform: scale(1.02); }
+        .floating { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    </style>
+</head>
+<body class="bg-gray-50 scroll-smooth">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-white shadow-sm z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold gradient-text">FreelanceHub</h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#home" class="nav-link text-gray-700 hover:text-purple-600">Home</a>
+                    <a href="#categories" class="nav-link text-gray-700 hover:text-purple-600">Categories</a>
+                    <a href="#freelancers" class="nav-link text-gray-700 hover:text-purple-600">Top Freelancers</a>
+                    <a href="#how-it-works" class="nav-link text-gray-700 hover:text-purple-600">How it Works</a>
+                    <a href="#testimonials" class="nav-link text-gray-700 hover:text-purple-600">Testimonials</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'login' %}" class="text-gray-700 hover:text-purple-600 font-medium">Log In</a>
+                    <a href="{% url 'register' %}" class="bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition duration-300">Sign Up</a>
+                </div>
+                <button class="md:hidden" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-2xl text-gray-700"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+            <div class="px-6 py-4 space-y-3">
+                <a href="{% url 'home' %}" class="block text-gray-700 hover:text-purple-600">Home</a>
+                <a href="#categories" class="block text-gray-700 hover:text-purple-600">Categories</a>
+                <a href="#freelancers" class="block text-gray-700 hover:text-purple-600">Top Freelancers</a>
+                <a href="#how-it-works" class="block text-gray-700 hover:text-purple-600">How it Works</a>
+                <a href="#testimonials" class="block text-gray-700 hover:text-purple-600">Testimonials</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-24 pb-20 hero-gradient text-white">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0 fade-in">
+                    <h2 class="text-5xl font-bold mb-6">Find Your Perfect Freelancer Today</h2>
+                    <p class="text-xl mb-8 text-purple-100">Connect with top talent from around the world. Get your projects done by experts in their field.</p>
+                    
+                    <!-- SEARCH FORM -->
+                   <form method="GET" action="{% url 'home' %}" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+    <input type="text" name="search" placeholder="What do you need done?" value="{{ search_query }}" class="flex-1 px-4 py-3 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600">
+    <select name="category" class="px-4 py-3 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition duration-300 font-semibold">
+        Search
+    </button>
+</form>
+
+
+                    <div class="mt-8 flex items-center space-x-8">
+                        <div>
+                            <p class="text-3xl font-bold">50K+</p>
+                            <p class="text-purple-100">Active Freelancers</p>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold">1M+</p>
+                            <p class="text-purple-100">Projects Completed</p>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold">98%</p>
+                            <p class="text-purple-100">Client Satisfaction</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="floating">
+                        <img src="https://picsum.photos/seed/freelance-hero/600/400" alt="Freelancers working" class="rounded-lg shadow-2xl">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Categories Section -->
+   <!-- Categories Section -->
+<section id="categories" class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12 fade-in">
+            <h3 class="text-4xl font-bold mb-4">Browse by Category</h3>
+            <p class="text-gray-600 text-lg">Find the perfect freelancer for your project</p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {% for category in categories %}
+            <div class="category-card bg-gray-50 p-6 rounded-lg text-center" onclick="filterByCategory('{{ category.id }}')">
+                <i class="{{ category.icon_class }} text-3xl text-purple-600 mb-3 category-icon"></i>
+                <h4 class="font-semibold">{{ category.name }}</h4>
+                <p class="text-sm text-gray-600 mt-1">{{ category.jobs.count }} Freelancers</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+    
+    <!-- Top Freelancers Section -->
+<section id="freelancers" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-12 fade-in">
+            <h3 class="text-4xl font-bold mb-4">Top Freelancers</h3>
+            <p class="text-gray-600 text-lg">Work with the best talent in the industry</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for job in jobs %}
+            <div class="bg-white rounded-lg shadow-lg card-hover cursor-pointer" onclick="showFreelancerDetails({{ job.id }})">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <img src="https://picsum.photos/seed/freelancer{{ job.id }}/80/80" alt="{{ job.freelancer }}" class="w-16 h-16 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-bold text-lg">{{ job.freelancer }}</h4>
+                            <p class="text-gray-600">{{ job.title }}</p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-700 mb-4">{{ job.description|truncatewords:20 }}</p>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-purple-600">${{ job.hourly_rate }}/hr</span>
+                        <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-300">
+                            View Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+                
+                
+                
+               
+            <div class="text-center mt-12">
+                <button class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition duration-300 font-semibold">
+                    View All Freelancers
+                </button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12 fade-in">
+                <h3 class="text-4xl font-bold mb-4">How It Works</h3>
+                <p class="text-gray-600 text-lg">Get started in 4 simple steps</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-600">1</span>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Post Your Project</h4>
+                    <p class="text-gray-600">Describe what you need and set your budget</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-600">2</span>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Receive Proposals</h4>
+                    <p class="text-gray-600">Get bids from qualified freelancers</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-600">3</span>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Choose Freelancer</h4>
+                    <p class="text-gray-600">Select the best fit for your project</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-600">4</span>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Get Work Done</h4>
+                    <p class="text-gray-600">Collaborate and pay when satisfied</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12 fade-in">
+                <h3 class="text-4xl font-bold mb-4">What Our Clients Say</h3>
+                <p class="text-gray-600 text-lg">Hear from businesses that found success on our platform</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <img src="https://picsum.photos/seed/client1/60/60" alt="John Doe" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h5 class="font-bold">John Doe</h5>
+                            <p class="text-sm text-gray-600">CEO, TechStart</p>
+                        </div>
+                    </div>
+                    <div class="flex text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700">"Found an amazing developer who delivered beyond our expectations. The platform made it easy to connect and collaborate."</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <img src="https://picsum.photos/seed/client2/60/60" alt="Jane Smith" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h5 class="font-bold">Jane Smith</h5>
+                            <p class="text-sm text-gray-600">Marketing Director</p>
+                        </div>
+                    </div>
+                    <div class="flex text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700">"The quality of freelancers on this platform is outstanding. We've built a long-term relationship with several talented professionals."</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <img src="https://picsum.photos/seed/client3/60/60" alt="Mike Johnson" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h5 class="font-bold">Mike Johnson</h5>
+                            <p class="text-sm text-gray-600">Startup Founder</p>
+                        </div>
+                    </div>
+                    <div class="flex text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="text-gray-700">"As a startup, we needed flexibility and expertise. This platform delivered both. Highly recommend for any business."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="py-20 hero-gradient text-white">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-4xl font-bold mb-4">Ready to Get Started?</h3>
+            <p class="text-xl mb-8 text-purple-100">Join thousands of businesses finding top talent today</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-white text-purple-600 px-8 py-3 rounded-lg hover:bg-gray-100 transition duration-300 font-semibold">
+                    Post a Project
+                </button>
+                <button class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg hover:bg-white hover:text-purple-600 transition duration-300 font-semibold">
+                    Become a Freelancer
+                </button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-2xl font-bold mb-4 gradient-text">FreelanceHub</h4>
+                    <p class="text-gray-400">Connecting talent with opportunity since 2020.</p>
+                </div>
+                
+                <div>
+                    <h5 class="font-bold mb-4">For Clients</h5>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">Post a Project</a></li>
+                        <li><a href="#" class="hover:text-white">Browse Freelancers</a></li>
+                        <li><a href="#" class="hover:text-white">How it Works</a></li>
+                        <li><a href="#" class="hover:text-white">Pricing</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="font-bold mb-4">For Freelancers</h5>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">Create Profile</a></li>
+                        <li><a href="#" class="hover:text-white">Browse Projects</a></li>
+                        <li><a href="#" class="hover:text-white">Success Stories</a></li>
+                        <li><a href="#" class="hover:text-white">Resources</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="font-bold mb-4">Connect</h5>
+                    <div class="flex space-x-4 mb-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram text-xl"></i></a>
+                    </div>
+                    <p class="text-gray-400">support@freelancehub.com</p>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 FreelanceHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Freelancer Details Modal -->
+    <div id="freelancerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-2xl font-bold" id="modalTitle">Freelancer Profile</h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="modalContent">
+                    <!-- Content will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('#mobileMenu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobileMenu').classList.add('hidden');
+            });
+        });
+        
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Category filter function
+        function filterByCategory(category) {
+            console.log('Filtering by category:', category);
+            // In a real application, this would filter the freelancers
+            // For now, we'll just show an alert
+            alert(`Filtering by ${category} category`);
+        }
+        
+        // Freelancer details data
+        const freelancerData = {
+            1: {
+                name: "Sarah Johnson",
+                title: "UI/UX Designer",
+                rating: 4.9,
+                hourlyRate: 45,
+                description: "I'm a passionate UI/UX designer with over 5 years of experience creating beautiful and functional digital products. I specialize in user-centered design and have worked with startups and Fortune 500 companies.",
+                skills: ["Figma", "Sketch", "Adobe XD", "Prototyping", "User Research", "Wireframing"],
+                portfolio: ["Project 1: E-commerce App Redesign", "Project 2: SaaS Dashboard Design", "Project 3: Mobile Banking App"],
+                location: "San Francisco, CA",
+                responseTime: "2 hours",
+                completedProjects: 156
+            },
+            2: {
+                name: "Michael Chen",
+                title: "Full Stack Developer",
+                rating: 5.0,
+                hourlyRate: 65,
+                description: "Full stack developer with expertise in modern web technologies. I build scalable, performant applications using React, Node.js, and cloud technologies. Passionate about clean code and best practices.",
+                skills: ["React", "Node.js", "MongoDB", "AWS", "TypeScript", "GraphQL"],
+                portfolio: ["Project 1: Real Estate Platform", "Project 2: Social Media Dashboard", "Project 3: E-learning Platform"],
+                location: "New York, NY",
+                responseTime: "1 hour",
+                completedProjects: 203
+            },
+            3: {
+                name: "Emma Williams",
+                title: "Content Writer",
+                rating: 4.8,
+                hourlyRate: 35,
+                description: "Professional content writer with a knack for creating engaging, SEO-optimized content. I've helped businesses increase their organic traffic by up to 300% through strategic content creation.",
+                skills: ["SEO Writing", "Blog Posts", "Copywriting", "Content Strategy", "Social Media", "Email Marketing"],
+                portfolio: ["Project 1: Tech Blog Content", "Project 2: Product Descriptions", "Project 3: Marketing Campaign Copy"],
+                location: "London, UK",
+                responseTime: "3 hours",
+                completedProjects: 289
+            }
+        };
+        
+        // Show freelancer details modal
+        function showFreelancerDetails(id) {
+            const freelancer = freelancerData[id];
+            const modal = document.getElementById('freelancerModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalTitle.textContent = freelancer.name;
+            
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <img src="https://picsum.photos/seed/freelancer${id}/100/100" alt="${freelancer.name}" class="w-24 h-24 rounded-full">
+                        <div>
+                            <h4 class="text-xl font-bold">${freelancer.name}</h4>
+                            <p class="text-gray-600">${freelancer.title}</p>
+                            <div class="flex items-center mt-1">
+                                <div class="flex text-yellow-400">
+                                    ${Array(5).fill().map((_, i) => 
+                                        i < Math.floor(freelancer.rating) 
+                                            ? '<i class="fas fa-star"></i>' 
+                                            : freelancer.rating % 1 !== 0 && i === Math.floor(freelancer.rating)
+                                                ? '<i class="fas fa-star-half-alt"></i>'
+                                                : '<i class="far fa-star"></i>'
+                                    ).join('')}
+                                </div>
+                                <span class="text-sm text-gray-600 ml-2">(${freelancer.rating})</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Hourly Rate</p>
+                            <p class="text-2xl font-bold text-purple-600">$${freelancer.hourlyRate}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Completed Projects</p>
+                            <p class="text-2xl font-bold text-purple-600">${freelancer.completedProjects}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h5 class="font-bold mb-2">About</h5>
+                        <p class="text-gray-700">${freelancer.description}</p>
+                    </div>
+                    
+                    <div>
+                        <h5 class="font-bold mb-2">Skills</h5>
+                        <div class="flex flex-wrap gap-2">
+                            ${freelancer.skills.map(skill => 
+                                `<span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">${skill}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h5 class="font-bold mb-2">Portfolio</h5>
+                        <ul class="list-disc list-inside text-gray-700">
+                            ${freelancer.portfolio.map(project => 
+                                `<li>${project}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <button class="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition duration-300">
+                            Hire ${freelancer.name.split(' ')[0]}
+                        </button>
+                        <button class="flex-1 border border-purple-600 text-purple-600 py-3 rounded-lg hover:bg-purple-50 transition duration-300">
+                            Send Message
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('freelancerModal').classList.add('hidden');
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('freelancerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
