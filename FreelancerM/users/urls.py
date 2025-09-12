@@ -1,13 +1,19 @@
 from django.urls import path
-from django.contrib.auth import views as auth_views
+from .views import register_view, login_view, logout_view
 from . import views
-from users.views import RegisterUserAPI  # Only if you defined class RegisterUser
 
+app_name = 'users'
 
 urlpatterns = [
-    path("login/", auth_views.LoginView.as_view(template_name="user/login.html"), name="login"),
-    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
-    path("register/", views.RegisterUserAPI.as_view(), name="register"),
-    path("profile/", views.profile, name="profile"),
-    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('register/', register_view, name='register'),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('freelancers/', views.freelancer_list, name='freelancer_list'),
+    path("password-reset/", views.password_reset_request, name="password_reset"),
+    path(
+        "password-reset-confirm/<uidb64>/<token>/",
+        views.password_reset_confirm,
+        name="password_reset_confirm",
+    ),
+    
 ]

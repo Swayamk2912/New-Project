@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import Job
 
-class JobSerializer(serializers.ModelSerializer):
+class JobPostingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
-        fields = ['id', 'title', 'description', 'category', 'client', 'hourly_rate', 'created_at']
+        fields = ['id', 'client', 'title', 'description', 'budget', 'deadline', 'created_at']
+        read_only_fields = ['client', 'created_at']

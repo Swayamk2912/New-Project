@@ -1,100 +1,111 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.views import View
-from django.views.generic import TemplateView
-from rest_framework import generics, permissions
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from .serializers import UserSerializer
 from .forms import CustomUserCreationForm
+from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.conf import settings
 
-# Home page view
-class HomeView(TemplateView):
-    template_name = 'home.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Add any context data you need for the home page
-        return context
 
-# API Registration
-class RegisterUserAPI(generics.CreateAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]
-
-# API Login
-class LoginUserAPI(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if user:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({
-                "token": token.key, 
-                "user_id": user.id, 
-                "username": user.username
-            })
-        return Response({"error": "Invalid credentials"}, status=400)
-
-# Template-based Registration
-class RegisterUserView(View):
-    def get(self, request):
-        form = CustomUserCreationForm()
-        return render(request, 'user/register.html', {'form': form})
-
-    def post(self, request):
+def register_view(request):
+    if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, "Account created successfully!")
-            
-            # Auto-login after registration
+            messages.success(request, "Account created.")
+            return redirect('users:login')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'users/register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
             login(request, user)
             return redirect('home')
-            
-        return render(request, 'user/register.html', {'form': form})
+    else:
+        form = AuthenticationForm()
+    return render(request, 'users/login.html', {'form': form})
 
-# Template-based Login
-class LoginUserView(View):
-    def get(self, request):
-        # If user is already authenticated, redirect to home
-        if request.user.is_authenticated:
-            return redirect('home')
-        return render(request, 'user/login.html')
-    
-    def post(self, request):
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(username=username, password=password)
-        
-        if user is not None:
-            login(request, user)
-            messages.success(request, f"Welcome back, {username}!")
-            
-            # Redirect to next parameter or home
-            next_url = request.POST.get('next', 'home')
-            return redirect(next_url)
-        else:
-            messages.error(request, "Invalid username or password.")
-            return render(request, 'user/login.html')
-
-# Logout view
-@login_required
 def logout_view(request):
     logout(request)
-    messages.info(request, "You have been logged out.")
     return redirect('home')
 
-# Profile view
 @login_required
-def profile(request):
-    return render(request, 'profile.html', {'user': request.user})
+def home(request):
+    return render(request, 'users/home.html')
 
-def dashboard_view(request):
-    return render(request, 'user/dashboard.html')
+User = get_user_model()
+
+@login_required
+def freelancer_list(request):
+    freelancers = User.objects.filter(role='freelancer')
+    return render(request, 'users/freelancer_list.html', {'freelancers': freelancers})
+
+def password_reset_request(request):
+    if request.method == "POST":
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            associated_users = User.objects.filter(email=email)
+            if associated_users.exists():
+                for user in associated_users:
+                    subject = "Password Reset Requested"
+                    email_template_name = "users/password_reset_email.html"
+                    context = {
+                        "email": user.email,
+                        "domain": request.get_host(),
+                        "site_name": "YourSite",
+                        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                        "user": user,
+                        "token": default_token_generator.make_token(user),
+                        "protocol": "http",
+                    }
+                    email_body = render_to_string(email_template_name, context)
+                    send_mail(
+                        subject,
+                        email_body,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [user.email],
+                        fail_silently=False,
+                    )
+                messages.success(request, "Password reset email sent.")
+                return redirect("users:login")
+            else:
+                messages.error(request, "No user is associated with this email.")
+    else:
+        form = PasswordResetForm()
+    return render(request, "users/password_reset_form.html", {"form": form})
+
+
+# ============================
+# Password Reset Confirm
+# ============================
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == "POST":
+            form = SetPasswordForm(user, request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Password has been reset. You can now log in.")
+                return redirect("users:login")
+        else:
+            form = SetPasswordForm(user)
+        return render(request, "users/password_reset_confirm.html", {"form": form})
+    else:
+        messages.error(request, "The password reset link is invalid or has expired.")
+        return redirect("users:password_reset")

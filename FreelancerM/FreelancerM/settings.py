@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'widget_tweaks',
+    'proposals', 'contracts', 'messaging', 'payments', 'notifications',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,14 @@ AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = "profile"
 LOGOUT_REDIRECT_URL = "login"
 LOGIN_URL = "login"
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly'
+    ]
+}

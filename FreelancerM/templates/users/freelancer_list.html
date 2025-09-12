@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Freelancers</h2>
+<ul>
+    {% for user in freelancers %}
+    <li>
+        {{ user.username }} - {{ user.profile.full_name }}
+        {% if user.profile.skills %} | Skills: {{ user.profile.skills }}{% endif %}
+        {% if user.profile.hourly_rate %} | Rate: ${{ user.profile.hourly_rate }}{% endif %}
+    </li>
+    {% empty %}
+    <li>No freelancers found.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
