@@ -1,55 +1,39 @@
-{% extends "base.html" %}
-{% block title %}Home - FreelanceHub{% endblock %}
-
-{% block content %}
-<!-- Hero Section -->
-<section class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-20">
-    <div class="container mx-auto text-center">
-        <h1 class="text-4xl font-bold mb-4">Find the Best Freelancers for Your Job</h1>
-        <p class="mb-6">Hire top talent and complete your projects with ease</p>
-        {% if user.is_authenticated %}
-            <a href="{% url 'jobs:post' %}" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold">Post a Job</a>
-        {% else %}
-            <a href="{% url 'register' %}" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold">Get Started</a>
-        {% endif %}
-    </div>
-</section>
-
-<!-- Latest Jobs -->
-<section class="py-16">
-    <div class="container mx-auto">
-        <h2 class="text-2xl font-bold mb-8">Latest Jobs</h2>
-        <div class="grid md:grid-cols-3 gap-6">
-            {% for job in jobs %}
-            <div class="p-6 bg-white rounded-xl shadow-md">
-                <h3 class="text-lg font-semibold mb-2">{{ job.title }}</h3>
-                <p class="text-gray-600 mb-4">{{ job.description|truncatewords:20 }}</p>
-                <p class="text-purple-600 font-bold">Budget: ${{ job.budget }}</p>
-                <a href="{% url 'jobs:detail' job.id %}" class="text-sm text-indigo-600 hover:underline mt-3 block">View Details</a>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FreelanceHub{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="bg-gray-50">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto flex justify-between items-center py-4 px-6">
+            <a href="{% url 'home' %}" class="text-2xl font-bold text-purple-600">FreelanceHub</a>
+            <div class="space-x-4">
+                <a href="{% url 'jobs:job-list' %}" class="text-gray-600 hover:text-purple-600">Jobs</a>
+                <a href="{% url 'users:freelancer_list' %}" class="text-gray-600 hover:text-purple-600">Freelancers</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-purple-600">Dashboard</a>
+                    <a href="{% url 'users:logout' %}" class="text-red-600 hover:text-red-800">Logout</a>
+                    <span class="text-gray-600">Hello, {{ user.username }}!</span>
+                {% else %}
+                    <a href="{% url 'users:login' %}" class="text-gray-600 hover:text-purple-600">Login</a>
+                    <a href="{% url 'users:register' %}" class="bg-purple-600 text-white px-3 py-1 rounded-lg">Sign Up</a>
+                {% endif %}
             </div>
-            {% empty %}
-            <p>No jobs available yet.</p>
-            {% endfor %}
         </div>
-    </div>
-</section>
+    </nav>
 
-<!-- Featured Freelancers -->
-<section class="py-16 bg-gray-100">
-    <div class="container mx-auto">
-        <h2 class="text-2xl font-bold mb-8">Top Freelancers</h2>
-        <div class="grid md:grid-cols-4 gap-6">
-            {% for freelancer in freelancers %}
-            <div class="bg-white p-6 rounded-xl shadow-md text-center">
-                <img src="{{ freelancer.profile_picture.url }}" class="w-20 h-20 rounded-full mx-auto mb-4">
-                <h3 class="text-lg font-semibold">{{ freelancer.user.username }}</h3>
-                <p class="text-gray-500">{{ freelancer.skills }}</p>
-                <a href="{% url 'freelancers:detail' freelancer.id %}" class="text-purple-600 hover:underline text-sm">View Profile</a>
-            </div>
-            {% empty %}
-            <p>No freelancers available yet.</p>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endblock %}
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white text-center py-6 mt-12">
+        <p>&copy; 2025 FreelanceHub. All rights reserved.</p>
+    </footer>
+</body>
+</html>

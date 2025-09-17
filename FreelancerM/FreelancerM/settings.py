@@ -45,11 +45,16 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'widget_tweaks',
     'proposals', 'contracts', 'messaging', 'payments', 'notifications',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -66,13 +71,58 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            
             ],
         },
     },
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Social account configuration
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': 'YOUR_GOOGLE_CLIENT_ID',
+            'secret': 'YOUR_GOOGLE_SECRET',
+            'key_file': None,
+        },
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'offline',
+        }
+    },
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SDK_URL': '//connect.facebook.net/en_US/sdk.js',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+            'first_name',
+            'last_name',
+            'verified_email',
+            'link'
+        ],
+        'EXCHANGE_TOKENS': True,
+        'LOCALE_FUNC': 'locale.getlocale',
+        'VERIFIED_EMAIL': True,
+        'VERSION': 'v17.0'
+    }
+}
 
 WSGI_APPLICATION = 'FreelancerM.wsgi.application'
 
@@ -123,9 +173,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR /'static'
-#STATICFILES_DIRS = [
-#'FreelancerM/static',
+STATIC_ROOT = BASE_DIR / 'staticfiles_collected' # Changed for deployment
+STATICFILES_DIRS = [
+    BASE_DIR / 'static', # For development static files
+]
 
 
 # Default primary key field type
@@ -134,7 +185,7 @@ STATIC_ROOT = BASE_DIR /'static'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
-LOGIN_REDIRECT_URL = "profile"
+LOGIN_REDIRECT_URL = "users:profile"
 LOGOUT_REDIRECT_URL = "login"
 LOGIN_URL = "login"
 

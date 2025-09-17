@@ -5,10 +5,13 @@ from . import views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', views.home, name='home'),
+    path('dashboard/', views.home, name='dashboard'),
     # App routes
     path("users/", include('users.urls',namespace='users')),
     path("jobs/", include("jobs.urls")),
     path("proposals/", include("proposals.urls")),
     #path("messages/", include("messaging.urls")),
     path("payments/", include("payments.urls")),
+    # django-allauth urls
+    path('accounts/', include('allauth.urls')),
 ]

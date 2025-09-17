@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Post a Job - FreelanceHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Post a New Job</h1>
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">Post Job</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

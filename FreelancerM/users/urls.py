@@ -9,11 +9,11 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('freelancers/', views.freelancer_list, name='freelancer_list'),
-    path("password-reset/", views.password_reset_request, name="password_reset"),
+    path("password-reset/", views.password_reset_request, name="password_reset_request"),
     path(
         "password-reset-confirm/<uidb64>/<token>/",
         views.password_reset_confirm,
         name="password_reset_confirm",
     ),
-    
+    path('profile/', views.profile_view, name='profile'),
 ]

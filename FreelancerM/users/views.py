@@ -109,3 +109,7 @@ def password_reset_confirm(request, uidb64, token):
     else:
         messages.error(request, "The password reset link is invalid or has expired.")
         return redirect("users:password_reset")
+
+@login_required
+def profile_view(request):
+    return render(request, 'users/profile.html')
