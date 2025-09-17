@@ -1,4 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from jobs.models import Job
+from users.models import User, Profile
+from jobs.models import Job
+from proposals.models import Proposal
 from django.contrib.auth import authenticate, login, logout
 from .forms import CustomUserCreationForm
 from django.contrib import messages
@@ -11,15 +16,19 @@ from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.conf import settings
-
-
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, "Account created.")
+            messages.success(request, "Account created successfully!")
             return redirect('users:login')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+            # If form is not valid, errors will be in form.errors
+            # and will be displayed by the template
     else:
         form = CustomUserCreationForm()
     return render(request, 'users/register.html', {'form': form})
@@ -30,7 +39,12 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('home')
+            if user.role == 'freelancer':
+                return redirect('home')
+            elif user.role == 'client':
+                return redirect('users:client_dashboard')
+            else:
+                return redirect('home')
     else:
         form = AuthenticationForm()
     return render(request, 'users/login.html', {'form': form})
@@ -112,4 +126,61 @@ def password_reset_confirm(request, uidb64, token):
 
 @login_required
 def profile_view(request):
-    return render(request, 'users/profile.html')
+    user = request.user
+    profile = user.profile
+    context = {
+        'user': user,
+        'profile': profile,
+    }
+    return render(request, 'users/profile.html', context)
+
+@login_required
+def freelancer_dashboard(request):
+    if request.user.role == 'freelancer':
+        proposals = Proposal.objects.filter(freelancer=request.user).order_by('-created_at')
+        context = {
+            'proposals': proposals,
+            'is_proposals_sent_page': False # Explicitly set for the main dashboard
+        }
+        return render(request, 'users/freelancer_dashboard.html', context)
+    else:
+        messages.error(request, "You are not authorized to view this page.")
+        return redirect('home')
+
+
+
+
+@login_required
+def proposals_sent_view(request):
+    if request.user.role == 'freelancer':
+        proposals = Proposal.objects.filter(freelancer=request.user).order_by('-created_at')
+        context = {
+            'proposals': proposals,
+            'is_proposals_sent_page': True # Indicate this is the proposals sent page
+        }
+        return render(request, 'users/freelancer_dashboard.html', context)
+    else:
+        messages.error(request, "You are not authorized to view this page.")
+        return redirect('home')
+
+
+@login_required
+def freelancer_detail(request, pk):
+    freelancer = get_user_model().objects.get(pk=pk, role='freelancer')
+    context = {
+        'freelancer': freelancer
+    }
+    return render(request, 'users/freelancer_detail.html', context)
+
+@login_required
+def client_dashboard(request):
+    if request.user.role != 'client':
+        messages.error(request, "You are not authorized to view this page.")
+        return redirect('home')
+
+    client_jobs = Job.objects.filter(client=request.user).prefetch_related('proposals__freelancer__profile')
+
+    context = {
+        'client_jobs': client_jobs,
+    }
+    return render(request, 'users/client_dashboard.html', context)

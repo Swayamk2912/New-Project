@@ -1,9 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from rest_framework import viewsets, permissions
 from .models import Job
 from .serializers import JobPostingSerializer
 from .forms import JobForm
+from proposals.forms import ProposalForm
 
 class JobPostingViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all().order_by('-created_at')
@@ -20,7 +22,36 @@ def post_job(request):
             job = form.save(commit=False)
             job.client = request.user
             job.save()
-            return redirect('jobs:job-list')  # Redirect to job list or job detail page
+            return redirect('home')  # Redirect to home page
     else:
         form = JobForm()
     return render(request, 'jobs/post_job.html', {'form': form})
+
+def job_list(request):
+    jobs = Job.objects.all().order_by('-created_at')
+    return render(request, 'jobs/job_list.html', {'jobs': jobs})
+
+@login_required
+def job_detail(request, pk):
+    job = get_object_or_404(Job, pk=pk)
+    
+    if request.user.role == 'freelancer' and request.user != job.client:
+        if request.method == 'POST':
+            form = ProposalForm(request.POST)
+            if form.is_valid():
+                proposal = form.save(commit=False)
+                proposal.job = job
+                proposal.freelancer = request.user
+                proposal.save()
+                messages.success(request, 'Your proposal has been submitted successfully!')
+                return redirect('jobs:job-detail', pk=job.pk)
+        else:
+            form = ProposalForm()
+    else:
+        form = None # Or an empty form if you want to display it but disable submission
+
+    context = {
+        'job': job,
+        'form': form,
+    }
+    return render(request, 'jobs/job_detail.html', context)

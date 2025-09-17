@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Job Postings{% endblock %}
+
+{% block content %}
+<style>
+    .job-listings-container {
+        padding: 40px 20px;
+        background-color: #f8f9fa;
+        min-height: 80vh;
+    }
+    .job-card {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+        padding: 25px;
+        transition: transform 0.2s ease-in-out;
+    }
+    .job-card:hover {
+        transform: translateY(-5px);
+    }
+    .job-card h3 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 1.8em;
+    }
+    .job-card p {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
+    .job-card .meta-info {
+        font-size: 0.9em;
+        color: #888;
+        margin-top: 15px;
+    }
+    .job-card .meta-info span {
+        margin-right: 15px;
+    }
+    .job-card .meta-info strong {
+        color: #555;
+    }
+    .job-card .btn-view-details {
+        display: inline-block;
+        background-color: #007bff;
+        color: #ffffff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        margin-top: 15px;
+        transition: background-color 0.2s ease;
+    }
+    .job-card .btn-view-details:hover {
+        background-color: #0056b3;
+    }
+    .no-jobs-message {
+        text-align: center;
+        color: #555;
+        font-size: 1.2em;
+        margin-top: 50px;
+    }
+</style>
+
+<div class="container job-listings-container">
+    <h2 class="text-center mb-4">Available Job Postings</h2>
+    <div class="row">
+        {% if jobs %}
+            {% for job in jobs %}
+            <div class="col-md-8 offset-md-2">
+                <div class="job-card">
+                    <h3>{{ job.title }}</h3>
+                    <p>{{ job.description|truncatechars:200 }}</p>
+                    <div class="meta-info">
+                        <span><strong>Category:</strong> {{ job.category.name }}</span>
+                        <span><strong>Budget:</strong> ${{ job.budget }}</span>
+                        <span><strong>Posted:</strong> {{ job.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <a href="{% url 'jobs:job-detail' job.id %}" class="btn-view-details">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <p class="no-jobs-message">No job postings available at the moment. Please check back later!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

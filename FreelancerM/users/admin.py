@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import User, Profile
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -9,3 +9,9 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ("Role Info", {"fields": ("role",)}),
     )
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "full_name", "hourly_rate", "rating")
+    search_fields = ("user__username", "full_name", "skills")
+    list_filter = ("rating",)

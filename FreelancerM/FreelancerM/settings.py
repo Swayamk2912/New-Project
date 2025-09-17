@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'widget_tweaks',
     'proposals', 'contracts', 'messaging', 'payments', 'notifications',
+    'channels', # Added for WebSocket support
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -75,7 +76,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-            
+                'messaging.context_processors.notification_counts', # Updated context processor
             ],
         },
     },
@@ -125,6 +126,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 WSGI_APPLICATION = 'FreelancerM.wsgi.application'
+ASGI_APPLICATION = 'FreelancerM.asgi.application'
 
 
 # Database
@@ -185,10 +187,15 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
-LOGIN_REDIRECT_URL = "users:profile"
-LOGOUT_REDIRECT_URL = "login"
-LOGIN_URL = "login"
+LOGOUT_REDIRECT_URL = "users:login"
+LOGIN_URL = "users:login"
 
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

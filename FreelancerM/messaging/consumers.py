@@ -19,30 +19,62 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        content = data.get('content')
-        sender_id = self.scope['user'].id
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
+        sender_username = text_data_json['sender']
 
-        # persist message
-        message = await database_sync_to_async(self.create_message)(sender_id, content)
+        sender = await self.get_user(sender_username)
+        conversation = await self.get_conversation(self.conversation_id)
+        
+        # Get the receiver from the conversation
+        receiver = await self.get_receiver(conversation, sender)
 
-        payload = {
-            'id': message.id,
-            'sender_id': sender_id,
-            'content': message.content,
-            'timestamp': message.timestamp.isoformat()
-        }
+        await self.save_message(conversation, sender, receiver, message)
 
-        # broadcast to group
-        await self.channel_layer.group_send(self.room_group_name, {
-            'type': 'chat.message',
-            'message': payload
-        })
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'chat_message',
+                'message': message,
+                'sender': sender_username
+            }
+        )
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps(event['message']))
+        message = event['message']
+        sender = event['sender']
 
-    def create_message(self, sender_id, content):
-        conv = Conversation.objects.get(id=self.conversation_id)
-        sender = User.objects.get(id=sender_id)
-        return Message.objects.create(conversation=conv, sender=sender, content=content)
+        await self.send(text_data=json.dumps({
+            'message': message,
+            'sender': sender
+        }))
+
+    @database_sync_to_async
+    def get_user(self, username):
+        return User.objects.get(username=username)
+
+    @database_sync_to_async
+    def get_conversation(self, conversation_id):
+        return Conversation.objects.get(id=conversation_id)
+    
+    @database_sync_to_async
+    def get_receiver(self, conversation, sender):
+        return conversation.participants.exclude(id=sender.id).first()
+
+    @database_sync_to_async
+    def save_message(self, conversation, sender, receiver, content):
+        print(f"Attempting to save message:")
+        print(f"  Conversation: {conversation.id if conversation else 'None'}")
+        print(f"  Sender: {sender.username if sender else 'None'}")
+        print(f"  Receiver: {receiver.username if receiver else 'None'}")
+        print(f"  Content: {content}")
+        try:
+            Message.objects.create(
+                conversation=conversation,
+                sender=sender,
+                receiver=receiver,
+                content=content
+            )
+            print("Message saved successfully!")
+        except Exception as e:
+            print(f"Error saving message: {e}")

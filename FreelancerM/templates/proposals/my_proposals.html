@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Proposals{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-10 px-4">
+    <h2 class="text-4xl font-extrabold text-center text-gray-900 mb-10 tracking-tight">My Proposals</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% if proposals %}
+            {% for proposal in proposals %}
+            <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
+                <div class="p-7">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 leading-tight">{{ proposal.job.title }}</h3>
+                    <p class="text-md text-gray-600 mb-5">Proposed to: <span class="font-semibold text-purple-700 hover:text-purple-800 transition-colors duration-200">{{ proposal.job.client.username }}</span></p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <p class="text-gray-800 flex items-center">
+                            <i class="fas fa-dollar-sign text-green-500 mr-2"></i>
+                            <strong>Budget:</strong> <span class="text-green-600 font-extrabold ml-2">${{ proposal.budget }}</span>
+                        </p>
+                        <p class="text-gray-800 flex items-start">
+                            <i class="fas fa-file-alt text-blue-500 mr-2 mt-1"></i>
+                            <strong>Description:</strong> <span class="ml-2">{{ proposal.description|truncatechars:120 }}</span>
+                        </p>
+                        <p class="text-gray-800 flex items-center">
+                            <i class="fas fa-info-circle text-yellow-500 mr-2"></i>
+                            <strong>Status:</strong> 
+                            <span class="ml-2 px-4 py-1.5 rounded-full text-sm font-bold 
+                                {% if proposal.status == 'accepted' %}bg-green-100 text-green-800
+                                {% elif proposal.status == 'rejected' %}bg-red-100 text-red-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ proposal.status|capfirst }}
+                            </span>
+                        </p>
+                        <p class="text-sm text-gray-500 flex items-center">
+                            <i class="fas fa-calendar-alt text-gray-400 mr-2"></i>
+                            <small>Proposed on: {{ proposal.created_at|date:"F d, Y" }}</small>
+                        </p>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'proposals:proposal_detail' proposal.pk %}" class="text-purple-600 hover:text-purple-800 font-semibold text-md">View Details &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-full text-center py-12 bg-white rounded-xl shadow-lg border border-gray-200">
+                <p class="text-gray-700 text-xl font-medium">You haven't made any proposals yet.</p>
+                <p class="text-gray-500 mt-2">Browse available jobs and start proposing!</p>
+                <a href="{% url 'marketplace:job_list' %}" class="mt-4 inline-block px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors duration-200">Browse Jobs</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -8,9 +8,10 @@ urlpatterns = [
     path('dashboard/', views.home, name='dashboard'),
     # App routes
     path("users/", include('users.urls',namespace='users')),
-    path("jobs/", include("jobs.urls")),
-    path("proposals/", include("proposals.urls")),
-    #path("messages/", include("messaging.urls")),
+    path("jobs/", include("jobs.urls", namespace='jobs')), # Template views
+    path("api/jobs/", include("jobs.api_urls")), # API views
+    path("proposals/", include("proposals.urls", namespace='proposals')),
+    path("messages/", include("messaging.urls", namespace='messaging')),
     path("payments/", include("payments.urls")),
     # django-allauth urls
     path('accounts/', include('allauth.urls')),

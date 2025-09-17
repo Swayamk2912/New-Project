@@ -19,6 +19,8 @@ class Proposal(models.Model):
     budget = models.DecimalField(max_digits=10, decimal_places=2)
     timeline = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    is_read_by_client = models.BooleanField(default=False) # New field
+    is_read_by_freelancer = models.BooleanField(default=False) # New field
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

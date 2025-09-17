@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ freelancer.username }}'s Profile</h1>
+    <p>Email: {{ freelancer.email }}</p>
+    <p>Role: {{ freelancer.role }}</p>
+    {% if freelancer.profile %}
+        <p>Title: {{ freelancer.profile.title }}</p>
+        <p>Portfolio: <a href="{{ freelancer.profile.portfolio }}" target="_blank">{{ freelancer.profile.portfolio }}</a></p>
+    {% endif %}
+    <a href="{% url 'users:freelancer_list' %}" class="btn btn-secondary">Back to Freelancers</a>
+</div>
+{% endblock %}

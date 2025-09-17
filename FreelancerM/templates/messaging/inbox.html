@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 inbox-container">
+    <div class="card">
+        <div class="card-header inbox-header hero-gradient">
+            <h2 class="mb-0 text-white">Inbox</h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% for conversation in conversations %}
+                    <a href="{% url 'messaging:conversation_detail' conversation.id %}" class="list-group-item list-group-item-action inbox-item">
+                        <div class="d-flex align-items-center">
+                            <div class="inbox-avatar me-3">
+                                {% for participant in conversation.participants.all %}
+                                    {% if participant != request.user %}
+                                        {% if participant.profile.avatar %} {# Assuming a profile with avatar field exists #}
+                                            <img src="{{ participant.profile.avatar.url }}" alt="{{ participant.username }}" class="rounded-circle" width="50" height="50">
+                                        {% else %}
+                                            <span class="avatar-initials">{{ participant.username.0|upper }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <h5 class="mb-1 inbox-participant-name">
+                                        {% for participant in conversation.participants.all %}
+                                            {% if participant != request.user %}
+                                                {{ participant.username }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </h5>
+                                    <div class="d-flex align-items-center">
+                                        {% if conversation.messages.last and not conversation.messages.last.is_read and conversation.messages.last.sender != request.user %}
+                                            <span class="new-message-indicator me-2"></span>
+                                        {% endif %}
+                                        <small class="text-muted">{{ conversation.updated_at|timesince }} ago</small>
+                                    </div>
+                                </div>
+                                <p class="mb-1 text-truncate inbox-last-message">
+                                    {% if conversation.messages.last %}
+                                        {{ conversation.messages.last.content|truncatewords:10 }}
+                                    {% else %}
+                                        No messages yet.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                {% empty %}
+                    <p class="p-3 text-center text-muted">You have no conversations.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

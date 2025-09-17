@@ -16,4 +16,8 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     path('profile/', views.profile_view, name='profile'),
+    path('dashboard/', views.freelancer_dashboard, name='freelancer_dashboard'),
+    path('proposals-sent/', views.proposals_sent_view, name='proposals_sent'),
+    path('freelancers/<int:pk>/', views.freelancer_detail, name='freelancer_detail'),
+    path('client-dashboard/', views.client_dashboard, name='client_dashboard'),
 ]

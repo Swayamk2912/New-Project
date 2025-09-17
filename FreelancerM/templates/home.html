@@ -8,12 +8,14 @@
         <h1 class="text-5xl font-extrabold mb-4 leading-tight">Your Next Project Starts Here</h1>
         <p class="text-xl mb-8 text-blue-100">Connect with skilled professionals and find the perfect talent for your needs.</p>
         <div class="flex justify-center space-x-4">
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and user.role == 'client' %}
                 <a href="{% url 'jobs:post_job' %}" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1">Post a Job</a>
-            {% else %}
+            {% elif not user.is_authenticated %}
                 <a href="{% url 'users:register' %}" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1">Get Started</a>
             {% endif %}
-            <a href="{% url 'jobs:job-list' %}" class="bg-transparent text-white font-bold py-3 px-8 rounded-lg border-2 border-white hover:bg-white hover:text-indigo-700 transition duration-300 ease-in-out transform hover:-translate-y-1">Browse Jobs</a>
+            {% if not user.is_authenticated or user.role == 'freelancer' %}
+                <a href="{% url 'jobs:job-list' %}" class="bg-transparent text-white font-bold py-3 px-8 rounded-lg border-2 border-white hover:bg-white hover:text-indigo-700 transition duration-300 ease-in-out transform hover:-translate-y-1">Browse Jobs</a>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -31,7 +33,7 @@
                     <span class="text-lg font-bold text-teal-600">Budget: ${{ job.budget }}</span>
                     <span class="text-sm text-gray-500">Posted: {{ job.created_at|date:"M d, Y" }}</span>
                 </div>
-                <a href="#" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline flex items-center">
+                <a href="{% url 'jobs:job-detail' job.pk %}" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline flex items-center">
                     View Details
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </a>
@@ -62,3 +64,4 @@
     </div>
 </section>
 {% endblock %}
+

@@ -13,4 +13,6 @@ class Profile(models.Model):
     bio = models.TextField(blank=True)
     skills = models.TextField(blank=True)  # or JSONField
     hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    title = models.CharField(max_length=100, blank=True)
+    portfolio = models.URLField(blank=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)

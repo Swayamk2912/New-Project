@@ -1,3 +1,6 @@
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -12,6 +15,45 @@ from payments.models import Payment
 from rest_framework.decorators import action
 
 from rest_framework.views import APIView
+from django.views.generic import TemplateView
+
+@login_required
+def proposal_list_view(request):
+    proposals = Proposal.objects.filter(job__client=request.user).order_by('-created_at')
+    context = {
+        'proposals': proposals
+    }
+    return render(request, 'proposals/proposal_list.html', context)
+
+class MyProposalsTemplateView(TemplateView):
+    template_name = 'proposals/my_proposals.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated and self.request.user.role == 'freelancer':
+            context['proposals'] = Proposal.objects.filter(freelancer=self.request.user).order_by('-created_at')
+        else:
+            context['proposals'] = Proposal.objects.none() # Or handle unauthorized access
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.role != 'freelancer':
+            messages.error(request, "You are not authorized to view this page.")
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+@login_required
+def proposal_detail_view(request, pk):
+    proposal = get_object_or_404(Proposal, pk=pk)
+    # Ensure only the freelancer who made the proposal or the client who owns the job can view it
+    if request.user != proposal.freelancer and request.user != proposal.job.client:
+        messages.error(request, "You are not authorized to view this proposal.")
+        return redirect('home') # Redirect to home or a more appropriate page
+
+    context = {
+        'proposal': proposal
+    }
+    return render(request, 'proposals/proposal_detail.html', context)
 
 class ProposalCreateView(generics.CreateAPIView):
     queryset = Proposal.objects.all()
@@ -41,59 +83,75 @@ class ProposalDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-# 4️⃣ Accept Proposal
+# 4️⃣ List Proposals for Client's Jobs
+class JobProposalsView(generics.ListAPIView):
+    serializer_class = ProposalSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Filter proposals for jobs posted by the current client
+        return Proposal.objects.filter(job__client=self.request.user).order_by('-created_at')
+
+
+# 5️⃣ Accept Proposal
+@login_required
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def accept_proposal(request, pk):
-    try:
-        proposal = Proposal.objects.get(pk=pk)
-    except Proposal.DoesNotExist:
-        return Response({'detail': 'Not found'}, status=404)
+    proposal = get_object_or_404(Proposal, pk=pk)
 
     job = proposal.job
     if job.client != request.user:
-        return Response({'detail': 'Not allowed'}, status=403)
+        messages.error(request, "You are not authorized to accept this proposal.")
+        return redirect('proposals:proposal_detail', pk=pk)
 
-    proposal.status = 'accepted'
-    proposal.save()
+    if proposal.status == 'pending':
+        proposal.status = 'accepted'
+        proposal.save()
 
-    # Create contract
-    contract = Contract.objects.create(
-        job=job,
-        client=job.client,
-        freelancer=proposal.freelancer,
-        agreed_budget=proposal.proposed_budget
-    )
+        # Create contract
+        contract = Contract.objects.create(
+            job=job,
+            client=job.client,
+            freelancer=proposal.freelancer,
+            agreed_budget=proposal.budget
+        )
 
-    # Create conversation
-    conv = Conversation.objects.create()
-    conv.participants.add(job.client, proposal.freelancer)
+        # Create conversation
+        conv = Conversation.objects.create()
+        conv.participants.add(job.client, proposal.freelancer)
 
-    # Mock payment
-    Payment.objects.create(
-        contract=contract,
-        amount=proposal.proposed_budget,
-        status='success',
-        provider='mock'
-    )
+        # Mock payment
+        Payment.objects.create(
+            contract=contract,
+            amount=proposal.budget,
+            status='success',
+            provider='mock'
+        )
+        messages.success(request, "Proposal accepted successfully and contract created.")
+    else:
+        messages.warning(request, f"Proposal is already {proposal.status}.")
 
-    return Response({'detail': 'Proposal accepted', 'contract_id': contract.id})
+    return redirect('proposals:proposal_detail', pk=pk)
 
 
 # 5️⃣ Reject Proposal
+@login_required
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def reject_proposal(request, pk):
-    try:
-        proposal = Proposal.objects.get(pk=pk)
-    except Proposal.DoesNotExist:
-        return Response({'detail': 'Not found'}, status=404)
+    proposal = get_object_or_404(Proposal, pk=pk)
 
     job = proposal.job
     if job.client != request.user:
-        return Response({'detail': 'Not allowed'}, status=403)
+        messages.error(request, "You are not authorized to reject this proposal.")
+        return redirect('proposals:proposal_detail', pk=pk)
 
-    proposal.status = 'rejected'
-    proposal.save()
+    if proposal.status == 'pending':
+        proposal.status = 'rejected'
+        proposal.save()
+        messages.success(request, "Proposal rejected successfully.")
+    else:
+        messages.warning(request, f"Proposal is already {proposal.status}.")
 
-    return Response({'detail': 'Proposal rejected'})
+    return redirect('proposals:proposal_detail', pk=pk)

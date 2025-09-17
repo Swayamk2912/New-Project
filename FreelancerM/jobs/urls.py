@@ -1,13 +1,10 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import JobPostingViewSet, post_job
+from django.urls import path
+from .views import post_job, job_list, job_detail
 
 app_name = 'jobs'  # namespace for template reverse
 
-router = DefaultRouter()
-router.register(r'', JobPostingViewSet, basename='job')
-
 urlpatterns = [
-    path('', include(router.urls)),
     path('post/', post_job, name='post_job'),
+    path('', job_list, name='job-list'),
+    path('<int:pk>/', job_detail, name='job-detail'),
 ]
