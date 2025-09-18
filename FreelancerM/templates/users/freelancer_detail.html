@@ -1,14 +1,54 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <h1>{{ freelancer.username }}'s Profile</h1>
-    <p>Email: {{ freelancer.email }}</p>
-    <p>Role: {{ freelancer.role }}</p>
+<div class="freelancer-detail-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {% if freelancer.profile.profile_picture %}
+                <img src="{{ freelancer.profile.profile_picture.url }}" alt="{{ freelancer.username }}'s profile picture">
+            {% else %}
+                <div class="avatar-placeholder">{{ freelancer.username|first }}</div>
+            {% endif %}
+        </div>
+        <div class="profile-info">
+            <h1 class="freelancer-name">{{ freelancer.username }} <span class="verified-badge" title="Verified Freelancer">&#10003;</span></h1>
+            {% if freelancer.profile.title %}
+                <p class="profile-title">{{ freelancer.profile.title }}</p>
+            {% endif %}
+            <p class="profile-email">{{ freelancer.email }}</p>
+            <p class="profile-role">Role: {{ freelancer.role }}</p>
+  
+        </div>
+    </div>
+
     {% if freelancer.profile %}
-        <p>Title: {{ freelancer.profile.title }}</p>
-        <p>Portfolio: <a href="{{ freelancer.profile.portfolio }}" target="_blank">{{ freelancer.profile.portfolio }}</a></p>
+    <div class="profile-section">
+        <h2>About:</h2>
+        <p>{{ freelancer.profile.bio|default:"No bio provided yet." }}</p>
+    </div>
+
+    {% if freelancer.profile.portfolio %}
+    <div class="profile-section">
+        <h2>Portfolio</h2>
+        <p><a href="{{ freelancer.profile.portfolio }}" target="_blank" class="portfolio-link">{{ freelancer.profile.portfolio }}</a></p>
+    </div>
     {% endif %}
-    <a href="{% url 'users:freelancer_list' %}" class="btn btn-secondary">Back to Freelancers</a>
-</div>
+    <div class="profile-actions">
+                <a href="{% url 'users:freelancer_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Freelancers</a>
+            </div>
+
+    {% if freelancer.profile.skills.all %}
+    <div class="profile-section">
+        <h2>Skills</h2>
+        <div class="skills-list">
+            {% for skill in freelancer.profile.skills.all %}
+                <span class="skill-tag">{{ skill.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+
 {% endblock %}

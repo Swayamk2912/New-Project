@@ -63,18 +63,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_message(self, conversation, sender, receiver, content):
-        print(f"Attempting to save message:")
-        print(f"  Conversation: {conversation.id if conversation else 'None'}")
-        print(f"  Sender: {sender.username if sender else 'None'}")
-        print(f"  Receiver: {receiver.username if receiver else 'None'}")
-        print(f"  Content: {content}")
-        try:
-            Message.objects.create(
-                conversation=conversation,
-                sender=sender,
-                receiver=receiver,
-                content=content
-            )
-            print("Message saved successfully!")
-        except Exception as e:
-            print(f"Error saving message: {e}")
+        Message.objects.create(
+            conversation=conversation,
+            sender=sender,
+            receiver=receiver,
+            content=content
+        )

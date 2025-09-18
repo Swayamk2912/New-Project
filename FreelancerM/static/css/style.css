@@ -1,10 +1,38 @@
 /* Basic styles for FreelanceHub */
+
+/* --- Variables for Cohesive Design --- */
+:root {
+    --primary-purple: #7B3F00; /* A warm, inviting purple */
+    --dark-purple: #5A2D00; /* Darker shade for accents */
+    --light-purple: #E0BBE4; /* Lighter shade for backgrounds */
+    --accent-green: #8DCCAD; /* A complementary green for verified badges */
+    --light-grey: #f8f9fa; /* Softer light grey */
+    --medium-grey: #ced4da; /* Slightly darker medium grey */
+    --dark-text: #212529; /* Darker text for better contrast */
+    --medium-text: #495057; /* Medium text for body */
+    --light-text: #6c757d; /* Lighter text for secondary info */
+    --white: #ffffff;
+    --shadow-light: rgba(0, 0, 0, 0.04);
+    --shadow-medium: rgba(0, 0, 0, 0.07);
+    --shadow-strong: rgba(0, 0, 0, 0.12);
+    --border-color: #e9ecef; /* Lighter border color */
+
+    /* New Fonts */
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Open Sans', sans-serif;
+}
+
 body {
-    font-family: sans-serif;
+    font-family: var(--font-body);
     margin: 0;
     padding: 0;
-    background-color: #f8f8f8;
+    background-color: var(--light-grey);
+    color: var(--medium-text);
+    line-height: 1.6;
 }
+
+/* Ensure Font Awesome is linked in base.html for icons to display */
+/* Example: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> */
 
 .hero-gradient {
     background: linear-gradient(to right, #8e2de2, #4a00e0);
@@ -157,6 +185,23 @@ body {
     border-color: #4a00e0;
 }
 
+.chat-icons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Aligns items to the right */
+}
+
+.chat-icons a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.chat-icons img {
+    /* Removed margin-right as it's not needed for just icons */
+}
+
 /* Inbox Page Styles */
 .inbox-container .card {
     border-radius: 15px;
@@ -266,5 +311,392 @@ body {
     }
     100% {
         box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+/* Freelancer Detail Page Styles */
+.freelancer-detail-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 40px; /* Increased padding */
+    background-color: var(--white);
+    border-radius: 20px; /* More rounded corners */
+    box-shadow: 0 15px 40px var(--shadow-medium); /* Enhanced shadow */
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 40px; /* Increased gap */
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+    width: 140px; /* Slightly larger avatar */
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 6px solid var(--primary-purple); /* Updated purple border */
+    box-shadow: 0 0 0 10px rgba(123, 63, 0, 0.15); /* Softer, more prominent shadow */
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary-purple); /* Updated purple background */
+    color: var(--white);
+    font-size: 4.5rem; /* Slightly larger font */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-family: var(--font-heading); /* Apply heading font */
+}
+
+.profile-info .freelancer-name {
+    font-family: var(--font-heading); /* Apply heading font */
+    font-size: 2.8rem; /* Larger font size */
+    color: var(--dark-text);
+    margin-bottom: 8px; /* Adjusted margin */
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Increased gap */
+}
+
+.verified-badge {
+    background-color: var(--accent-green); /* New accent green */
+    color: var(--white);
+    font-size: 0.9rem; /* Slightly smaller font */
+    padding: 5px 12px; /* Adjusted padding */
+    border-radius: 25px; /* More rounded */
+    font-weight: 600; /* Slightly less bold */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px var(--shadow-light);
+}
+
+.verified-badge::before {
+    content: '\f00c'; /* Font Awesome check icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 5px;
+}
+
+.profile-title {
+    font-family: var(--font-heading); /* Apply heading font */
+    font-size: 1.4rem; /* Slightly larger */
+    color: var(--medium-text);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.profile-email,
+.profile-role {
+    font-size: 1.05rem; /* Slightly larger */
+    color: var(--light-text);
+    margin-bottom: 6px;
+}
+
+.profile-actions {
+    margin-top: 25px; /* Increased margin */
+    display: flex;
+    gap: 20px; /* Increased gap */
+}
+
+.profile-actions .btn {
+    padding: 14px 30px; /* Larger buttons */
+    border-radius: 10px; /* More rounded */
+    font-weight: 700; /* Bolder */
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px; /* Increased gap */
+    font-size: 1.05rem;
+}
+
+.profile-actions .btn-primary {
+    background-color: var(--primary-purple);
+    color: var(--white);
+    border: 1px solid var(--primary-purple);
+    box-shadow: 0 5px 15px rgba(123, 63, 0, 0.25); /* Updated shadow */
+}
+
+.profile-actions .btn-primary:hover {
+    background-color: var(--dark-purple);
+    border-color: var(--dark-purple);
+    transform: translateY(-3px); /* More pronounced lift */
+    box-shadow: 0 8px 20px rgba(123, 63, 0, 0.35); /* Stronger shadow on hover */
+    filter: brightness(1.1); /* Slightly brighter on hover */
+}
+
+.profile-actions .btn-secondary {
+    background-color: var(--light-grey);
+    color: var(--medium-text);
+    border: 1px solid var(--medium-grey);
+    box-shadow: 0 3px 8px var(--shadow-light);
+}
+
+.profile-actions .btn-secondary:hover {
+    background-color: var(--medium-grey); /* Darker on hover */
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px var(--shadow-medium);
+    filter: brightness(0.95); /* Slightly darker on hover */
+}
+
+.profile-section {
+    margin-bottom: 35px; /* Increased margin */
+    padding-bottom: 25px; /* Increased padding */
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Testimonials Section Styles */
+.testimonials-section {
+    background-color: var(--light-purple); /* Lighter purple background */
+    padding: 40px; /* Increased padding */
+    border-radius: 20px; /* More rounded */
+    box-shadow: 0 8px 25px var(--shadow-medium); /* Enhanced shadow */
+    margin-top: 40px; /* Increased margin */
+}
+
+.testimonials-section h2 {
+    font-family: var(--font-heading); /* Apply heading font */
+    font-size: 2.2rem; /* Larger font size */
+    color: var(--dark-text);
+    margin-bottom: 30px; /* Increased margin */
+    text-align: center;
+}
+
+.testimonial-card {
+    background-color: var(--white); /* White background for cards */
+    padding: 30px; /* Increased padding */
+    border-radius: 15px; /* More rounded */
+    margin-bottom: 25px; /* Increased margin */
+    box-shadow: 0 4px 12px var(--shadow-light);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-7px); /* More pronounced lift */
+    box-shadow: 0 10px 25px var(--shadow-medium);
+}
+
+.testimonial-text {
+    font-size: 1.15rem; /* Slightly larger font */
+    font-style: italic;
+    color: var(--dark-text);
+    margin-bottom: 20px; /* Increased margin */
+    position: relative;
+    padding-left: 25px; /* Increased padding */
+}
+
+.testimonial-text::before {
+    content: '“';
+    font-family: var(--font-heading); /* Apply heading font */
+    font-size: 3.5rem; /* Larger quote */
+    color: var(--dark-purple); /* Darker purple for quote */
+    position: absolute;
+    left: 0;
+    top: -15px; /* Adjusted position */
+    line-height: 1;
+}
+
+.testimonial-author {
+    font-size: 1rem; /* Slightly larger */
+    font-weight: 700; /* Bolder */
+    color: var(--primary-purple);
+    text-align: right;
+}
+
+.profile-section h2 {
+    font-family: var(--font-heading); /* Apply heading font */
+    font-size: 2rem; /* Larger font size */
+    color: var(--dark-text);
+    margin-bottom: 20px; /* Increased margin */
+    position: relative;
+    padding-left: 20px; /* Increased padding */
+    transition: color 0.3s ease;
+}
+
+.profile-section h2:hover {
+    color: var(--primary-purple); /* Change color on hover */
+}
+
+.profile-section h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px; /* Thicker accent */
+    height: 90%; /* Taller accent */
+    background-color: var(--primary-purple); /* Updated purple accent */
+    border-radius: 4px; /* More rounded */
+}
+
+.profile-section p {
+    font-size: 1.1rem;
+    line-height: 1.75; /* Slightly increased line height */
+    color: var(--medium-text);
+}
+
+.portfolio-link {
+    color: var(--primary-purple); /* Updated link color */
+    text-decoration: none;
+    font-weight: 600; /* Slightly less bold */
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.portfolio-link:hover {
+    color: var(--dark-purple); /* Darker on hover */
+    text-decoration: underline;
+}
+
+.skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px; /* Increased gap */
+    margin-top: 20px; /* Increased margin */
+}
+
+.skill-tag {
+    background-color: var(--light-grey);
+    color: var(--medium-text);
+    padding: 9px 18px; /* Slightly larger padding */
+    border-radius: 25px; /* More rounded */
+    font-size: 0.95rem; /* Slightly larger font */
+    font-weight: 600;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 5px var(--shadow-light);
+}
+
+.skill-tag:hover {
+    background-color: var(--primary-purple);
+    color: var(--white);
+    transform: translateY(-3px) scale(1.05); /* More pronounced lift and slight scale */
+    box-shadow: 0 5px 15px var(--shadow-strong); /* Stronger shadow on hover */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .freelancer-detail-container {
+        margin: 20px auto;
+        padding: 25px;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 25px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-width: 4px;
+        box-shadow: 0 0 0 8px rgba(123, 63, 0, 0.1);
+    }
+
+    .avatar-placeholder {
+        font-size: 3.5rem;
+    }
+
+    .profile-info .freelancer-name {
+        font-size: 2.2rem;
+        flex-direction: column; /* Stack name and badge on small screens */
+        gap: 5px;
+    }
+
+    .verified-badge {
+        font-size: 0.85rem;
+        padding: 4px 10px;
+    }
+
+    .profile-title {
+        font-size: 1.2rem;
+    }
+
+    .profile-email,
+    .profile-role {
+        font-size: 0.95rem;
+    }
+
+    .profile-actions {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .profile-actions .btn {
+        width: 100%;
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+
+    .profile-section h2 {
+        font-size: 1.6rem;
+        padding-left: 15px;
+    }
+
+    .profile-section h2::before {
+        width: 4px;
+        height: 80%;
+    }
+
+    .profile-section p {
+        font-size: 1rem;
+    }
+
+    .testimonials-section {
+        padding: 30px;
+        margin-top: 30px;
+    }
+
+    .testimonials-section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+    }
+
+    .testimonial-card {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+
+    .testimonial-text {
+        font-size: 1rem;
+        padding-left: 20px;
+    }
+
+    .testimonial-text::before {
+        font-size: 3rem;
+        top: -10px;
+    }
+
+    .skill-tag {
+        padding: 7px 12px;
+        font-size: 0.85rem;
     }
 }

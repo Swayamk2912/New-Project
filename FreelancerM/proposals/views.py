@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from notifications.models import Notification
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -109,6 +112,30 @@ def accept_proposal(request, pk):
         proposal.status = 'accepted'
         proposal.save()
 
+        # Create notification for the freelancer
+        notification_message = f"Your proposal for '{job.title}' has been accepted!"
+        Notification.objects.create(
+            user=proposal.freelancer,
+            verb=notification_message,
+            payload={'proposal_id': proposal.id, 'job_id': job.id, 'status': 'accepted'}
+        )
+
+        # Send real-time notification via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"notifications_{proposal.freelancer.id}",
+            {
+                "type": "send_notification",
+                "message": {
+                    "action": "new_notification",
+                    "title": "Proposal Accepted",
+                    "message": notification_message,
+                    "url": f"/proposals/{proposal.id}/",
+                    "timestamp": str(Notification.objects.filter(user=proposal.freelancer).latest('created_at').created_at)
+                },
+            }
+        )
+
         # Create contract
         contract = Contract.objects.create(
             job=job,
@@ -151,6 +178,30 @@ def reject_proposal(request, pk):
         proposal.status = 'rejected'
         proposal.save()
         messages.success(request, "Proposal rejected successfully.")
+
+        # Create notification for the freelancer
+        notification_message = f"Your proposal for '{job.title}' has been rejected."
+        Notification.objects.create(
+            user=proposal.freelancer,
+            verb=notification_message,
+            payload={'proposal_id': proposal.id, 'job_id': job.id, 'status': 'rejected'}
+        )
+
+        # Send real-time notification via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"notifications_{proposal.freelancer.id}",
+            {
+                "type": "send_notification",
+                "message": {
+                    "action": "new_notification",
+                    "title": "Proposal Rejected",
+                    "message": notification_message,
+                    "url": f"/proposals/{proposal.id}/",
+                    "timestamp": str(Notification.objects.filter(user=proposal.freelancer).latest('created_at').created_at)
+                },
+            }
+        )
     else:
         messages.warning(request, f"Proposal is already {proposal.status}.")
 

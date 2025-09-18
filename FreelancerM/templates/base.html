@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;606;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
     <!-- Navbar -->
@@ -19,18 +20,12 @@
                 <div class="relative">
                     <button id="notification-bell" class="text-gray-600 hover:text-purple-600 focus:outline-none">
                         <i class="fas fa-bell"></i>
-                        {% if total_notifications > 0 %}
-                            <span id="notification-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">{{ total_notifications }}</span>
-                        {% else %}
-                            <span id="notification-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden">0</span>
-                        {% endif %}
+                        <span id="notification-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">0</span>
                     </button>
                     <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-20">
                         <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="notification-bell">
-                            {% if total_notifications == 0 %}
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 no-notifications" role="menuitem">No new notifications</a>
-                            {% endif %}
                             <!-- Notifications will be added here by WebSocket -->
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 no-notifications" role="menuitem">No new notifications</a>
                         </div>
                     </div>
                 </div>
@@ -88,30 +83,60 @@
 
         notificationSocket.onopen = function(e) {
             console.log("Notification WebSocket connected.");
+            // Request initial unread count when connected
+            notificationSocket.send(JSON.stringify({
+                'action': 'get_unread_count'
+            }));
         };
 
         notificationSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             console.log("Notification received:", data);
 
-            // Update notification count
             const notificationCountSpan = document.getElementById('notification-count');
-            let currentCount = parseInt(notificationCountSpan.innerText);
-            notificationCountSpan.innerText = currentCount + 1;
-            notificationCountSpan.classList.remove('hidden'); // Ensure it's visible
+            const notificationDropdownContent = document.getElementById('notification-dropdown').querySelector('div');
 
-            // Add notification to dropdown
-            const notificationDropdown = document.getElementById('notification-dropdown').querySelector('div');
-            const newNotificationLink = document.createElement('a');
-            newNotificationLink.href = "#"; // Link to notification detail page if available
-            newNotificationLink.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100');
-            newNotificationLink.innerText = data.verb; // Display the notification verb
-            notificationDropdown.prepend(newNotificationLink); // Add to top of dropdown
+            if (data.action === 'new_notification') {
+                // Update notification count
+                let currentCount = parseInt(notificationCountSpan.innerText);
+                notificationCountSpan.innerText = currentCount + 1;
+                notificationCountSpan.classList.remove('hidden');
 
-            // Remove "No new notifications" if present
-            const noNotifications = notificationDropdown.querySelector('.no-notifications');
-            if (noNotifications) {
-                noNotifications.remove();
+                // Add notification to dropdown
+                const newNotificationDiv = document.createElement('div');
+                newNotificationDiv.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'notification-item');
+                newNotificationDiv.setAttribute('data-notification-id', data.id); // Assuming data.id will be sent from backend for new notifications
+
+                const notificationTitle = document.createElement('p');
+                notificationTitle.classList.add('font-semibold');
+                notificationTitle.innerText = data.title;
+
+                const notificationMessage = document.createElement('p');
+                notificationMessage.innerText = data.message;
+
+                const notificationTime = document.createElement('span');
+                notificationTime.classList.add('text-xs', 'text-gray-500');
+                notificationTime.innerText = new Date(data.timestamp).toLocaleString(); // Format timestamp
+
+                const notificationLink = document.createElement('a');
+                notificationLink.href = data.url || "#";
+                notificationLink.classList.add('text-purple-600', 'hover:underline');
+                notificationLink.innerText = "View Details";
+
+                newNotificationDiv.appendChild(notificationTitle);
+                newNotificationDiv.appendChild(notificationMessage);
+                newNotificationDiv.appendChild(notificationTime);
+                newNotificationDiv.appendChild(notificationLink);
+
+                notificationDropdownContent.prepend(newNotificationDiv);
+
+                // Remove "No new notifications" if present
+                const noNotifications = notificationDropdownContent.querySelector('.no-notifications');
+                if (noNotifications) {
+                    noNotifications.remove();
+                }
+            } else if (data.action === 'unread_count_update') {
+                updateNotificationCount(data.unread_count);
             }
         };
 
@@ -123,12 +148,28 @@
             console.error('Notification WebSocket error:', e);
         };
 
+        function updateNotificationCount(count) {
+            const notificationCountSpan = document.getElementById('notification-count');
+            notificationCountSpan.innerText = count;
+            if (count > 0) {
+                notificationCountSpan.classList.remove('hidden');
+            } else {
+                notificationCountSpan.classList.add('hidden');
+            }
+        }
+
         // Toggle notification dropdown
         const notificationBell = document.getElementById('notification-bell');
         const notificationDropdown = document.getElementById('notification-dropdown');
 
         notificationBell.addEventListener('click', function() {
             notificationDropdown.classList.toggle('hidden');
+            // Mark all notifications as read when the bell is clicked and dropdown is shown
+            if (!notificationDropdown.classList.contains('hidden')) {
+                notificationSocket.send(JSON.stringify({
+                    'action': 'mark_all_read'
+                }));
+            }
         });
 
         // Close dropdown if clicked outside
@@ -138,22 +179,20 @@
             }
         });
 
-        // Initial fetch for unread notifications (optional, can be done via an API endpoint)
-        // For now, we'll assume the count starts at 0 and updates via WebSocket
-        // You might want an API endpoint to fetch initial unread count and recent notifications
+        // Initial setup for notification count
         document.addEventListener('DOMContentLoaded', function() {
-            const notificationCountSpan = document.getElementById('notification-count');
-            if (notificationCountSpan.innerText === '0') {
-                notificationCountSpan.classList.add('hidden');
-            }
-            // Placeholder for initial notifications if needed
+            updateNotificationCount({{ total_notifications }});
+
+            // Placeholder for initial notifications if needed (can be fetched via API)
             const notificationDropdownContent = document.getElementById('notification-dropdown').querySelector('div');
-            if (notificationDropdownContent.children.length === 0) {
-                const noNotificationsLink = document.createElement('a');
-                noNotificationsLink.href = "#";
-                noNotificationsLink.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'no-notifications');
-                noNotificationsLink.innerText = "No new notifications";
-                notificationDropdownContent.appendChild(noNotificationsLink);
+            if (notificationDropdownContent.children.length === 0 || notificationDropdownContent.querySelector('.no-notifications')) {
+                if ({{ total_notifications }} === 0) {
+                    const noNotificationsLink = document.createElement('a');
+                    noNotificationsLink.href = "#";
+                    noNotificationsLink.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'no-notifications');
+                    noNotificationsLink.innerText = "No new notifications";
+                    notificationDropdownContent.appendChild(noNotificationsLink);
+                }
             }
         });
 

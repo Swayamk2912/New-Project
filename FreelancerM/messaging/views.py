@@ -3,6 +3,10 @@ from django.contrib.auth.decorators import login_required
 from .models import Conversation, Message
 from django.db.models import Q
 from users.models import User
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializers import ConversationSerializer, MessageSerializer
 
 @login_required
 def inbox(request):
