@@ -16,6 +16,13 @@ from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
+from .serializers import UserSerializer
+
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -42,7 +49,7 @@ def login_view(request):
             if user.role == 'freelancer':
                 return redirect('home')
             elif user.role == 'client':
-                return redirect('users:client_dashboard')
+                return redirect('home') 
             else:
                 return redirect('home')
     else:
@@ -184,3 +191,23 @@ def client_dashboard(request):
         'client_jobs': client_jobs,
     }
     return render(request, 'users/client_dashboard.html', context)
+
+
+class RegisterUserAPI(APIView):
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key, 'user_id': user.pk, 'email': user.email}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginUserAPI(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key, 'user_id': user.pk, 'email': user.email}, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)

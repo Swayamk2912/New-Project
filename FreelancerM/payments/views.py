@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 
 # Create your views here.
 from rest_framework import generics, permissions, status
@@ -7,6 +8,21 @@ from rest_framework.views import APIView
 from proposals.models import Proposal
 from contracts.models import Contract
 from .models import Payment
+
+def initiate_payment(request, proposal_id):
+    proposal = get_object_or_404(Proposal, pk=proposal_id)
+
+    if request.user != proposal.job.client:
+        return redirect('home') # Or some other appropriate redirect/error page
+
+    if proposal.status != 'accepted':
+        return redirect('proposals:proposal_detail', pk=proposal_id) # Cannot pay for non-accepted proposals
+
+    context = {
+        'proposal': proposal,
+        'client_secret': 'mock_client_secret' # In a real app, this would come from a payment gateway
+    }
+    return render(request, 'payments/initiate_payment.html', context)
 
 class PaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -45,7 +61,8 @@ class PaymentView(APIView):
         return Response({
             'detail': 'Payment successful',
             'payment_id': payment.id,
-            'contract_id': contract.id
+            'contract_id': contract.id,
+            'redirect_url': reverse('payments:payment_success')
         }, status=status.HTTP_201_CREATED)
 
 def payment_success(request):

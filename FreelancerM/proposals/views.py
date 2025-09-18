@@ -148,13 +148,6 @@ def accept_proposal(request, pk):
         conv = Conversation.objects.create()
         conv.participants.add(job.client, proposal.freelancer)
 
-        # Mock payment
-        Payment.objects.create(
-            contract=contract,
-            amount=proposal.budget,
-            status='success',
-            provider='mock'
-        )
         messages.success(request, "Proposal accepted successfully and contract created.")
     else:
         messages.warning(request, f"Proposal is already {proposal.status}.")

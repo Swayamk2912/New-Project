@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Initiate Payment{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-8 px-4">
+    <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Confirm Payment for "{{ proposal.job.title }}"</h2>
+
+        <div class="mb-6 border-b pb-4">
+            <p class="text-gray-600 text-lg mb-2"><strong>Freelancer:</strong> {{ proposal.freelancer.username }}</p>
+            <p class="text-gray-600 text-lg mb-2"><strong>Amount to Pay:</strong> <span class="text-green-600 font-semibold">${{ proposal.budget }}</span></p>
+            <p class="text-gray-600 text-lg"><strong>Proposal Status:</strong> <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">{{ proposal.status|capfirst }}</span></p>
+        </div>
+
+        <p class="text-gray-700 mb-6">
+            You are about to make a payment of <strong>${{ proposal.budget }}</strong> to <strong>{{ proposal.freelancer.username }}</strong> for the job <strong>"{{ proposal.job.title }}"</strong>.
+            Please confirm the details below before proceeding.
+        </p>
+
+        <div class="mt-6 pt-4 border-t flex justify-center">
+            <button id="confirmPaymentButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out">
+                Confirm and Pay
+            </button>
+        </div>
+
+        <div id="paymentMessage" class="mt-4 text-center text-lg font-semibold hidden"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('confirmPaymentButton').addEventListener('click', function() {
+        const proposalId = "{{ proposal.pk }}";
+        const paymentMessage = document.getElementById('paymentMessage');
+
+        fetch(`/payments/api/pay/${proposalId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({}) // No additional data needed for this mock payment
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.detail === 'Payment successful') {
+                paymentMessage.textContent = 'Payment successful! Redirecting...';
+                paymentMessage.className = 'mt-4 text-center text-lg font-semibold text-green-600';
+                paymentMessage.classList.remove('hidden');
+                window.location.href = data.redirect_url;
+            } else {
+                paymentMessage.textContent = `Payment failed: ${data.detail}`;
+                paymentMessage.className = 'mt-4 text-center text-lg font-semibold text-red-600';
+                paymentMessage.classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            paymentMessage.textContent = 'An error occurred during payment.';
+            paymentMessage.className = 'mt-4 text-center text-lg font-semibold text-red-600';
+            paymentMessage.classList.remove('hidden');
+        });
+    });
+</script>
+{% endblock %}
