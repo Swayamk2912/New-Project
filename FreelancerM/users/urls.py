@@ -9,6 +9,7 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('freelancers/', views.freelancer_list, name='freelancer_list'),
+    path('freelancer/<int:pk>/', views.freelancer_detail, name='freelancer_detail'),
     path("password-reset/", views.password_reset_request, name="password_reset_request"),
     path(
         "password-reset-confirm/<uidb64>/<token>/",
@@ -17,4 +18,6 @@ urlpatterns = [
     ),
     path('profile/', views.profile_view, name='profile'),
     path('dashboard/', views.freelancer_dashboard, name='freelancer_dashboard'),
+    path("password-reset/done/", views.password_reset_done, name="password_reset_done"),
+    path("password-reset/complete/", views.password_reset_complete, name="password_reset_complete"),
 ]

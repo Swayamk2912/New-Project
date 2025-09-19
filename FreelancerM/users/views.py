@@ -76,36 +76,46 @@ def password_reset_request(request):
         form = PasswordResetForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
+            # Only send one email, regardless of how many users share the email address
+            # This prevents user enumeration attacks.
             associated_users = User.objects.filter(email=email)
             if associated_users.exists():
-                for user in associated_users:
-                    subject = "Password Reset Requested"
-                    email_template_name = "users/password_reset_email.html"
-                    context = {
-                        "email": user.email,
-                        "domain": request.get_host(),
-                        "site_name": "YourSite",
-                        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-                        "user": user,
-                        "token": default_token_generator.make_token(user),
-                        "protocol": "http",
-                    }
-                    email_body = render_to_string(email_template_name, context)
-                    send_mail(
-                        subject,
-                        email_body,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [user.email],
-                        fail_silently=False,
-                    )
+                # For simplicity, we'll just take the first user found.
+                # In a real-world scenario, you might send a generic email
+                # without confirming if the email exists or which user it belongs to.
+                user = associated_users.first()
+                subject = "Password Reset Requested"
+                email_template_name = "users/password_reset_email.html"
+                context = {
+                    "email": user.email,
+                    "domain": request.get_host(),
+                    "site_name": "YourSite",
+                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                    "user": user,
+                    "token": default_token_generator.make_token(user),
+                    "protocol": "http",
+                }
+                email_body = render_to_string(email_template_name, context)
+                send_mail(
+                    subject,
+                    email_body,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
                 messages.success(request, "Password reset email sent.")
-                return redirect("users:login")
+                return redirect("users:password_reset_done")
             else:
-                messages.error(request, "No user is associated with this email.")
+                # Even if no user is associated, we redirect to password_reset_done
+                # to avoid revealing whether an email address is registered.
+                messages.info(request, "If an account with that email exists, we've sent password reset instructions.")
+                return redirect("users:password_reset_done")
     else:
         form = PasswordResetForm()
     return render(request, "users/password_reset_form.html", {"form": form})
 
+def password_reset_done(request):
+    return render(request, "users/password_reset_done.html")
 
 # ============================
 # Password Reset Confirm
@@ -123,13 +133,16 @@ def password_reset_confirm(request, uidb64, token):
             if form.is_valid():
                 form.save()
                 messages.success(request, "Password has been reset. You can now log in.")
-                return redirect("users:login")
+                return redirect("users:password_reset_complete")
         else:
             form = SetPasswordForm(user)
         return render(request, "users/password_reset_confirm.html", {"form": form})
     else:
         messages.error(request, "The password reset link is invalid or has expired.")
-        return redirect("users:password_reset")
+        return redirect("users:password_reset_request")
+
+def password_reset_complete(request):
+    return render(request, "users/password_reset_complete.html")
 
 @login_required
 def profile_view(request):

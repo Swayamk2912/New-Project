@@ -189,6 +189,15 @@ AUTH_USER_MODEL = 'users.User'
 LOGOUT_REDIRECT_URL = "users:login"
 LOGIN_URL = "users:login"
 
+# Email settings for production (SMTP backend)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'swayamkalra2003@gmail.com'
+EMAIL_HOST_PASSWORD = 'qjzb knfi ialk gvmm'  
+DEFAULT_FROM_EMAIL = 'swayamkalra2003@gmail.com'  
+
 
 CHANNEL_LAYERS = {
     'default': {

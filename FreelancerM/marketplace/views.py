@@ -10,3 +10,4 @@ def home(request):
         'freelancers': featured_freelancers,
     }
     return render(request, 'home.html', context)
+    
