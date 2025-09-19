@@ -37,3 +37,18 @@ class CustomUserCreationForm(UserCreationForm):
                 # Rating is not set by the form, so it remains None or its default value.
                 profile.save()
         return user
+
+class UserUpdateForm(forms.ModelForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['bio', 'skills', 'hourly_rate', 'title', 'portfolio']
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4}),
+        }

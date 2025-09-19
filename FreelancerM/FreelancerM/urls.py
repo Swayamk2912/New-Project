@@ -11,7 +11,7 @@ urlpatterns = [
     path('categories/', include('categories.urls')),
     path('proposals/', include('proposals.urls')),
     path('messages/', include('messaging.urls')),
-    path('payments/', include('payments.urls')),
+    path('payments/', include('payments.urls', namespace='payments')),
     path('api/users/', include('users.api_urls')),
     path('api/jobs/', include('jobs.api_urls')),
     path('accounts/', include('allauth.urls')),

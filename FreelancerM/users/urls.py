@@ -18,6 +18,7 @@ urlpatterns = [
     ),
     path('profile/', views.profile_view, name='profile'),
     path('dashboard/', views.freelancer_dashboard, name='freelancer_dashboard'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
     path("password-reset/done/", views.password_reset_done, name="password_reset_done"),
     path("password-reset/complete/", views.password_reset_complete, name="password_reset_complete"),
 ]

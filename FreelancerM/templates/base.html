@@ -48,7 +48,7 @@
                     </a>
                     <a href="{% url 'users:profile' %}" class="text-gray-600 hover:text-purple-600">Dashboard</a>
                     <a href="{% url 'users:logout' %}" class="text-red-600 hover:text-red-800">Logout</a>
-                    <span class="text-gray-600">Hello, {{ user.username }}!</span>
+                    <span class="text-gray-600">Hello, {{ user.username }}! ({{ user.role|capfirst }})</span>
                 {% else %}
                     <a href="{% url 'users:login' %}" class="text-gray-600 hover:text-purple-600">Login</a>
                     <a href="{% url 'users:register' %}" class="bg-purple-600 text-white px-3 py-1 rounded-lg">Sign Up</a>

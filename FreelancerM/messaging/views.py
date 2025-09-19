@@ -18,6 +18,10 @@ def inbox(request):
 def conversation_detail(request, conversation_id):
     conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
     messages = conversation.messages.all().order_by('timestamp')
+
+    # Mark all unread messages in this conversation as read for the current user
+    conversation.messages.filter(receiver=request.user, is_read=False).update(is_read=True)
+
     return render(request, 'messaging/chat.html', {'conversation': conversation, 'messages': messages})
 
 @login_required

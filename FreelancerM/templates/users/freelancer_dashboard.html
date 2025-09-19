@@ -9,6 +9,7 @@
         <ul class="flex space-x-4">
             <li><a href="{% url 'users:freelancer_dashboard' %}" class="{% if not is_proposals_sent_page %}text-indigo-800 font-bold{% else %}text-indigo-600 hover:text-indigo-800{% endif %} font-medium">Your Proposals</a></li>
             <li><a href="{% url 'proposals:freelancer_proposals' %}" class="{% if is_proposals_sent_page %}text-indigo-800 font-bold{% else %}text-indigo-600 hover:text-indigo-800{% endif %} font-medium">Proposals Sent</a></li>
+            <li><a href="{% url 'users:profile' %}" class="text-indigo-600 hover:text-indigo-800 font-medium">Edit Profile</a></li>
         </ul>
     </nav>
 
