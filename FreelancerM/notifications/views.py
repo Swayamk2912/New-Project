@@ -58,8 +58,10 @@ def unread_notification_count(request):
     count = Notification.objects.filter(user=request.user, is_read=False).count()
     return JsonResponse({'unread_count': count})
 
+from django.shortcuts import render
+
 @login_required
-def notification_list(request):
+def notification_list_api(request):
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10] # Get latest 10
     notification_data = []
     for notification in notifications:
@@ -78,9 +80,24 @@ def notification_list(request):
     return JsonResponse({'notifications': notification_data})
 
 @login_required
+def notification_list_page(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'notifications/notification_list.html', {'notifications': notifications})
+
+@login_required
 @csrf_exempt
 def mark_notifications_read(request):
     if request.method == 'POST':
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return JsonResponse({'status': 'success', 'message': 'All notifications marked as read'})
+    return JsonResponse({'status': 'error', 'message': 'Only POST requests are allowed'}, status=405)
+
+@login_required
+@csrf_exempt
+def mark_single_notification_read(request, notification_id):
+    if request.method == 'POST':
+        notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'status': 'success', 'message': 'Notification marked as read'})
     return JsonResponse({'status': 'error', 'message': 'Only POST requests are allowed'}, status=405)

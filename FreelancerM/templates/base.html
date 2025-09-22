@@ -27,6 +27,10 @@
                             <!-- Notifications will be added here by WebSocket -->
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 no-notifications" role="menuitem">No new notifications</a>
                         </div>
+                        <div class="border-t border-gray-200">
+                            <button id="mark-all-read-btn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none">Mark all as read</button>
+                            <a href="{% url 'notifications:notification_list' %}" class="block px-4 py-2 text-sm text-purple-600 hover:bg-gray-100">View All Notifications</a>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
@@ -73,6 +77,7 @@
         const notificationDropdown = document.getElementById('notification-dropdown');
         const notificationDropdownContent = notificationDropdown.querySelector('div');
         const notificationBell = document.getElementById('notification-bell');
+        const markAllReadBtn = document.getElementById('mark-all-read-btn');
 
         function updateNotificationCount(count) {
             notificationCountSpan.innerText = count;
@@ -189,8 +194,12 @@
             notificationDropdown.classList.toggle('hidden');
             if (!notificationDropdown.classList.contains('hidden')) {
                 fetchNotifications(); // Fetch and display notifications when dropdown is opened
-                markAllNotificationsRead(); // Mark as read when opened
             }
+        });
+
+        // Mark all as read button listener
+        markAllReadBtn.addEventListener('click', function() {
+            markAllNotificationsRead();
         });
 
         // Close dropdown if clicked outside

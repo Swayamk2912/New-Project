@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Your Notifications</h1>
+
+    <div id="notification-list-container" class="bg-white shadow-md rounded-lg p-6">
+        {% if notifications %}
+            {% for notification in notifications %}
+            <div class="border-b border-gray-200 py-4 {% if not notification.is_read %}bg-blue-50{% endif %}">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-lg font-semibold text-gray-800">{{ notification.verb }}</p>
+                        <p class="text-gray-600">{{ notification.payload.message }}</p>
+                        <span class="text-xs text-gray-500">{{ notification.created_at|date:"F j, Y, P" }}</span>
+                    </div>
+                    <div>
+                        {% if notification.payload.url %}
+                            <a href="{{ notification.payload.url }}" class="text-purple-600 hover:underline ml-4">View Details</a>
+                        {% endif %}
+                        {% if not notification.is_read %}
+                            <button class="mark-as-read-btn text-sm text-green-600 hover:text-green-800 ml-2" data-notification-id="{{ notification.id }}">Mark as Read</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="mt-6 text-right">
+                <button id="mark-all-read-page-btn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 focus:outline-none">Mark All As Read</button>
+            </div>
+        {% else %}
+            <p class="text-gray-600">You have no notifications.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const markAllReadPageBtn = document.getElementById('mark-all-read-page-btn');
+        const markAsReadBtns = document.querySelectorAll('.mark-as-read-btn');
+
+        async function markNotificationAsRead(notificationId) {
+            try {
+                const response = await fetch(`/notifications/mark_read/${notificationId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    console.log(`Notification ${notificationId} marked as read.`);
+                    // Optionally update the UI
+                    const notificationDiv = document.querySelector(`[data-notification-id="${notificationId}"]`).closest('.border-b');
+                    if (notificationDiv) {
+                        notificationDiv.classList.remove('bg-blue-50');
+                        const button = notificationDiv.querySelector('.mark-as-read-btn');
+                        if (button) button.remove();
+                    }
+                    // Update the count in the navbar
+                    fetchNotificationCount();
+                } else {
+                    console.error('Error marking notification as read:', data.error);
+                }
+            } catch (error) {
+                console.error('Network error marking notification as read:', error);
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                const response = await fetch('/notifications/mark_read/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    console.log('All notifications marked as read:', data.message);
+                    // Update UI for all notifications
+                    document.querySelectorAll('.notification-item').forEach(item => {
+                        item.closest('.border-b').classList.remove('bg-blue-50');
+                        const button = item.querySelector('.mark-as-read-btn');
+                        if (button) button.remove();
+                    });
+                    // Update the count in the navbar
+                    fetchNotificationCount();
+                } else {
+                    console.error('Error marking all notifications as read:', data.error);
+                }
+            } catch (error) {
+                console.error('Network error marking all notifications as read:', error);
+            }
+        }
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        if (markAllReadPageBtn) {
+            markAllReadPageBtn.addEventListener('click', markAllNotificationsRead);
+        }
+
+        markAsReadBtns.forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationId = this.dataset.notificationId;
+                markNotificationAsRead(notificationId);
+            });
+        });
+    });
+</script>
+{% endblock %}
