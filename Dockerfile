@@ -1,26 +1,26 @@
 FROM python:3.10-slim-bullseye
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH /app/FreelancerM
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
+# Workdir points to the actual Django folder
 WORKDIR /app
 
-# Install psycopg2 dependencies
-RUN apt-get update \
-    && apt-get install -y libpq-dev gcc \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libjpeg-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy requirements first if available
+COPY FreelancerM/requirements.txt /app/requirements.txt
 
-# Copy project
-COPY . /app
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Expose port
+# Copy only project (not the outer folder)
+COPY FreelancerM /app
+
 EXPOSE 8000
 
-# Default command
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "FreelancerM.wsgi:application"]
-
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
