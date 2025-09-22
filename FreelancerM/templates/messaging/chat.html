@@ -29,7 +29,7 @@
                         <br>
                         <small class="text-muted">{{ message.timestamp|date:"N j, Y, P" }}</small>
                         {% if message.sender == request.user %}
-                            <button class="btn btn-sm btn-outline-danger delete-message-btn" data-message-id="{{ message.id }}">Delete</button>
+                            <button class="btn btn-sm btn-outline-danger delete-message-btn" data-message-id="{{ message.id }}">Delete Message</button>
                         {% endif %}
                     </div>
                 {% else %}
