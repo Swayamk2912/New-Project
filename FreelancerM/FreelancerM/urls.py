@@ -14,5 +14,6 @@ urlpatterns = [
     path('payments/', include('payments.urls', namespace='payments')),
     path('api/users/', include('users.api_urls')),
     path('api/jobs/', include('jobs.api_urls')),
+    path('notifications/', include('notifications.urls')), # Include notifications app URLs
     path('accounts/', include('allauth.urls')),
 ]

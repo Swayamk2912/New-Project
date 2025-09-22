@@ -69,79 +69,12 @@
     {% if user.is_authenticated %}
     <script>
         const userId = "{{ user.id }}";
-        const notificationSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/notifications/'
-        );
-
-        notificationSocket.onopen = function(e) {
-            console.log("Notification WebSocket connected.");
-            // Request initial unread count when connected
-            notificationSocket.send(JSON.stringify({
-                'action': 'get_unread_count'
-            }));
-        };
-
-        notificationSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            console.log("Notification received:", data);
-
-            const notificationCountSpan = document.getElementById('notification-count');
-            const notificationDropdownContent = document.getElementById('notification-dropdown').querySelector('div');
-
-            if (data.action === 'new_notification') {
-                // Update notification count
-                let currentCount = parseInt(notificationCountSpan.innerText);
-                notificationCountSpan.innerText = currentCount + 1;
-                notificationCountSpan.classList.remove('hidden');
-
-                // Add notification to dropdown
-                const newNotificationDiv = document.createElement('div');
-                newNotificationDiv.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'notification-item');
-                newNotificationDiv.setAttribute('data-notification-id', data.id); // Assuming data.id will be sent from backend for new notifications
-
-                const notificationTitle = document.createElement('p');
-                notificationTitle.classList.add('font-semibold');
-                notificationTitle.innerText = data.title;
-
-                const notificationMessage = document.createElement('p');
-                notificationMessage.innerText = data.message;
-
-                const notificationTime = document.createElement('span');
-                notificationTime.classList.add('text-xs', 'text-gray-500');
-                notificationTime.innerText = new Date(data.timestamp).toLocaleString(); // Format timestamp
-
-                const notificationLink = document.createElement('a');
-                notificationLink.href = data.url || "#";
-                notificationLink.classList.add('text-purple-600', 'hover:underline');
-                notificationLink.innerText = "View Details";
-
-                newNotificationDiv.appendChild(notificationTitle);
-                newNotificationDiv.appendChild(notificationMessage);
-                newNotificationDiv.appendChild(notificationTime);
-                newNotificationDiv.appendChild(notificationLink);
-
-                notificationDropdownContent.prepend(newNotificationDiv);
-
-                // Remove "No new notifications" if present
-                const noNotifications = notificationDropdownContent.querySelector('.no-notifications');
-                if (noNotifications) {
-                    noNotifications.remove();
-                }
-            } else if (data.action === 'unread_count_update') {
-                updateNotificationCount(data.unread_count);
-            }
-        };
-
-        notificationSocket.onclose = function(e) {
-            console.error('Notification WebSocket closed unexpectedly');
-        };
-
-        notificationSocket.onerror = function(e) {
-            console.error('Notification WebSocket error:', e);
-        };
+        const notificationCountSpan = document.getElementById('notification-count');
+        const notificationDropdown = document.getElementById('notification-dropdown');
+        const notificationDropdownContent = notificationDropdown.querySelector('div');
+        const notificationBell = document.getElementById('notification-bell');
 
         function updateNotificationCount(count) {
-            const notificationCountSpan = document.getElementById('notification-count');
             notificationCountSpan.innerText = count;
             if (count > 0) {
                 notificationCountSpan.classList.remove('hidden');
@@ -150,17 +83,113 @@
             }
         }
 
-        // Toggle notification dropdown
-        const notificationBell = document.getElementById('notification-bell');
-        const notificationDropdown = document.getElementById('notification-dropdown');
+        async function fetchNotificationCount() {
+            try {
+                const response = await fetch('/notifications/unread_count/');
+                const data = await response.json();
+                if (response.ok) {
+                    updateNotificationCount(data.unread_count);
+                } else {
+                    console.error('Error fetching notification count:', data.error);
+                }
+            } catch (error) {
+                console.error('Network error fetching notification count:', error);
+            }
+        }
 
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/notifications/list/');
+                const data = await response.json();
+                if (response.ok) {
+                    notificationDropdownContent.innerHTML = ''; // Clear existing notifications
+                    if (data.notifications.length > 0) {
+                        data.notifications.forEach(notification => {
+                            const newNotificationDiv = document.createElement('div');
+                            newNotificationDiv.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'notification-item');
+                            newNotificationDiv.setAttribute('data-notification-id', notification.id);
+
+                            const notificationTitle = document.createElement('p');
+                            notificationTitle.classList.add('font-semibold');
+                            notificationTitle.innerText = notification.verb;
+
+                            const notificationMessage = document.createElement('p');
+                            notificationMessage.innerText = notification.message; // Assuming 'message' field in payload or directly in notification
+
+                            const notificationTime = document.createElement('span');
+                            notificationTime.classList.add('text-xs', 'text-gray-500');
+                            notificationTime.innerText = new Date(notification.created_at).toLocaleString();
+
+                            const notificationLink = document.createElement('a');
+                            notificationLink.href = notification.url || "#";
+                            notificationLink.classList.add('text-purple-600', 'hover:underline');
+                            notificationLink.innerText = "View Details";
+
+                            newNotificationDiv.appendChild(notificationTitle);
+                            newNotificationDiv.appendChild(notificationMessage);
+                            newNotificationDiv.appendChild(notificationTime);
+                            newNotificationDiv.appendChild(notificationLink);
+                            notificationDropdownContent.appendChild(newNotificationDiv);
+                        });
+                    } else {
+                        const noNotificationsLink = document.createElement('a');
+                        noNotificationsLink.href = "#";
+                        noNotificationsLink.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'no-notifications');
+                        noNotificationsLink.innerText = "No new notifications";
+                        notificationDropdownContent.appendChild(noNotificationsLink);
+                    }
+                } else {
+                    console.error('Error fetching notifications:', data.error);
+                }
+            } catch (error) {
+                console.error('Network error fetching notifications:', error);
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                const response = await fetch('/notifications/mark_read/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    console.log('Notifications marked as read:', data.message);
+                    fetchNotificationCount(); // Update count after marking as read
+                } else {
+                    console.error('Error marking notifications as read:', data.error);
+                }
+            } catch (error) {
+                console.error('Network error marking notifications as read:', error);
+            }
+        }
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Toggle notification dropdown
         notificationBell.addEventListener('click', function() {
             notificationDropdown.classList.toggle('hidden');
-            // Mark all notifications as read when the bell is clicked and dropdown is shown
             if (!notificationDropdown.classList.contains('hidden')) {
-                notificationSocket.send(JSON.stringify({
-                    'action': 'mark_all_read'
-                }));
+                fetchNotifications(); // Fetch and display notifications when dropdown is opened
+                markAllNotificationsRead(); // Mark as read when opened
             }
         });
 
@@ -171,23 +200,11 @@
             }
         });
 
-        // Initial setup for notification count
+        // Initial fetch and periodic polling
         document.addEventListener('DOMContentLoaded', function() {
-            updateNotificationCount({{ total_notifications }});
-
-            // Placeholder for initial notifications if needed (can be fetched via API)
-            const notificationDropdownContent = document.getElementById('notification-dropdown').querySelector('div');
-            if (notificationDropdownContent.children.length === 0 || notificationDropdownContent.querySelector('.no-notifications')) {
-                if ({{ total_notifications }} === 0) {
-                    const noNotificationsLink = document.createElement('a');
-                    noNotificationsLink.href = "#";
-                    noNotificationsLink.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'no-notifications');
-                    noNotificationsLink.innerText = "No new notifications";
-                    notificationDropdownContent.appendChild(noNotificationsLink);
-                }
-            }
+            fetchNotificationCount(); // Initial fetch
+            setInterval(fetchNotificationCount, 30000); // Poll every 30 seconds
         });
-
     </script>
     {% endif %}
 </body>
