@@ -189,11 +189,14 @@ AUTH_USER_MODEL = 'users.User'
 LOGOUT_REDIRECT_URL = "users:login"
 LOGIN_URL = "users:login"
 
+# Base URL for the site (used for email links)
+SITE_URL = 'http://localhost:8000' # Change this to your production domain
+
 # Email settings for production (SMTP backend)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
 EMAIL_HOST_USER = 'swayamkalra2003@gmail.com'
 EMAIL_HOST_PASSWORD = 'qjzb knfi ialk gvmm'  
 DEFAULT_FROM_EMAIL = 'swayamkalra2003@gmail.com'  
