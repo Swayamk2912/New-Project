@@ -195,8 +195,10 @@ SITE_URL = 'http://localhost:8000' # Change this to your production domain
 # Email settings for production (SMTP backend)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False # Explicitly set to False when using TLS
+EMAIL_TIMEOUT = 5 # Add a timeout for email sending
 EMAIL_HOST_USER = 'swayamkalra2003@gmail.com'
 EMAIL_HOST_PASSWORD = 'qjzb knfi ialk gvmm'  
 DEFAULT_FROM_EMAIL = 'swayamkalra2003@gmail.com'  

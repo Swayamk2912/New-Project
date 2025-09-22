@@ -9,6 +9,7 @@ class Conversation(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False) # New field for soft deletion
 
     def __str__(self):
         return f"Conversation {self.id}"
@@ -35,6 +36,7 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False) # New field for soft deletion
 
     def __str__(self):
         return f"Message from {self.sender.username} to {self.receiver.username}"

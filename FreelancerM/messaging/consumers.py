@@ -20,33 +20,61 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-        sender_username = text_data_json['sender']
+        message_type = text_data_json.get('type')
 
-        sender = await self.get_user(sender_username)
-        conversation = await self.get_conversation(self.conversation_id)
-        
-        # Get the receiver from the conversation
-        receiver = await self.get_receiver(conversation, sender)
+        if message_type == 'chat_message':
+            message_content = text_data_json['message']
+            sender_username = text_data_json['sender']
 
-        await self.save_message(conversation, sender, receiver, message)
+            sender = await self.get_user(sender_username)
+            conversation = await self.get_conversation(self.conversation_id)
+            
+            # Get the receiver from the conversation
+            receiver = await self.get_receiver(conversation, sender)
 
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message,
-                'sender': sender_username
-            }
-        )
+            new_message = await self.save_message(conversation, sender, receiver, message_content)
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message_content,
+                    'sender': sender_username,
+                    'message_id': new_message.id,
+                    'timestamp': new_message.timestamp.isoformat(),
+                }
+            )
 
     async def chat_message(self, event):
         message = event['message']
         sender = event['sender']
+        message_id = event['message_id']
+        timestamp = event['timestamp']
 
         await self.send(text_data=json.dumps({
+            'type': 'chat_message',
             'message': message,
-            'sender': sender
+            'sender': sender,
+            'message_id': message_id,
+            'timestamp': timestamp,
+        }))
+
+    async def message_deleted(self, event):
+        message_id = event['message_id']
+        timestamp = event['timestamp']
+
+        await self.send(text_data=json.dumps({
+            'type': 'message_deleted',
+            'message_id': message_id,
+            'timestamp': timestamp,
+        }))
+
+    async def conversation_deleted(self, event):
+        conversation_id = event['conversation_id']
+
+        await self.send(text_data=json.dumps({
+            'type': 'conversation_deleted',
+            'conversation_id': conversation_id,
         }))
 
     @database_sync_to_async
@@ -63,7 +91,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_message(self, conversation, sender, receiver, content):
-        Message.objects.create(
+        return Message.objects.create(
             conversation=conversation,
             sender=sender,
             receiver=receiver,
