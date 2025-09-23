@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     libjpeg-dev \
     zlib1g-dev \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first if available
@@ -20,7 +21,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy only project (not the outer folder)
 COPY FreelancerM /app
+COPY wait-for-redis.sh /app/wait-for-redis.sh
+RUN chmod +x /app/wait-for-redis.sh
 
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "FreelancerM/manage.py", "runserver", "0.0.0.0:8000"]

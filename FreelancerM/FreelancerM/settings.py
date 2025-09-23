@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'celery', # Added for Celery integration
 ]
 
 MIDDLEWARE = [
@@ -194,19 +196,36 @@ SITE_URL = 'http://localhost:8000' # Change this to your production domain
 
 # Email settings for production (SMTP backend)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False # Explicitly set to False when using TLS
 EMAIL_TIMEOUT = 5 # Add a timeout for email sending
-EMAIL_HOST_USER = 'swayamkalra2003@gmail.com'
-EMAIL_HOST_PASSWORD = 'qjzb knfi ialk gvmm'  
-DEFAULT_FROM_EMAIL = 'swayamkalra2003@gmail.com'  
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'swayamkalra2003@gmail.com') # Sender's Gmail address
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'nbxu vdhb nhpx oijp') # The generated App Password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER # Default sender for emails
+SERVER_EMAIL = EMAIL_HOST_USER # For error reporting from Django
 
+# Base URL for the site (used for email links)
+BASE_URL = 'http://localhost:8000' # Change this to your production domain
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://redis:6379/0' # Redis as the message broker
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0' # Store task results in Redis
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Calcutta' # Or your desired timezone
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_ALWAYS_EAGER = False # Set to True for synchronous execution in tests
+CELERY_WORKER_POOL = 'solo' # Use solo for Windows compatibility to avoid eventlet/ssl issues
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis', 6379)],
+        },
     },
 }
 

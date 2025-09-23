@@ -101,3 +101,11 @@ def mark_single_notification_read(request, notification_id):
         notification.save()
         return JsonResponse({'status': 'success', 'message': 'Notification marked as read'})
     return JsonResponse({'status': 'error', 'message': 'Only POST requests are allowed'}, status=405)
+
+@login_required
+def unsubscribe_notifications(request):
+    # This is a placeholder. In a real application, you would
+    # implement the logic to unsubscribe the user from notifications.
+    # For example, you might set a flag on the user's profile.
+    # For now, we'll just return a success message.
+    return JsonResponse({'status': 'success', 'message': 'Unsubscribed from notifications'})

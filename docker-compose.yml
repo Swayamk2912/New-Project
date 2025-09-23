@@ -3,6 +3,7 @@ version: '3.8'
 services:
   db:
     image: postgres:13
+    container_name: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
@@ -11,20 +12,70 @@ services:
       POSTGRES_PASSWORD: django_password
     ports:
       - "5433:5432"
+    networks:
+      - freelancerm_network
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+    networks:
+      - freelancerm_network
 
   web:
     build: .
+    container_name: django_web
     volumes:
       - .:/app
       - static_volume:/NEW PROJECT/FreelancerM/staticfiles_collected
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgres://django_user:django_password@db:5432/django_db
       PYTHONPATH: /app/FreelancerM
+      REDIS_HOST: redis   # 👈 inside Docker, use the service name
+      REDIS_PORT: 6379
+    networks:
+      - freelancerm_network
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    command: ./wait-for-redis.sh redis 6379 celery -A FreelancerM worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://django_user:django_password@db:5432/django_db
+      PYTHONPATH: /app/FreelancerM
+      REDIS_HOST: redis   # 👈 same here
+      REDIS_PORT: 6379
+    networks:
+      - freelancerm_network
+
+networks:
+  freelancerm_network:
+    driver: bridge
 
 volumes:
   postgres_data:
   static_volume:
+  redis_data:

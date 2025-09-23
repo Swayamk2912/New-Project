@@ -6,6 +6,7 @@ from .models import Job
 from .serializers import JobPostingSerializer
 from .forms import JobForm
 from proposals.forms import ProposalForm
+from proposals.tasks import send_proposal_notification_email_task
 
 class JobPostingViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all().order_by('-created_at')
@@ -43,6 +44,8 @@ def job_detail(request, pk):
                 proposal.job = job
                 proposal.freelancer = request.user
                 proposal.save()
+                print(f"New proposal added via HTML form: Proposal ID - {proposal.id}, Job - {proposal.job.title}, Freelancer - {proposal.freelancer.username}")
+                send_proposal_notification_email_task.delay(proposal.id)
                 messages.success(request, 'Your proposal has been submitted successfully!')
                 return redirect('jobs:job-detail', pk=job.pk)
         else:

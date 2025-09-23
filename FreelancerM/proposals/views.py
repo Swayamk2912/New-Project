@@ -13,6 +13,7 @@ from jobs.models import Job
 from contracts.models import Contract
 from messaging.models import Conversation
 from payments.models import Payment
+from .tasks import send_proposal_notification_email_task # Import the Celery task
 
 # 1️⃣ Create Proposal
 from rest_framework.decorators import action
@@ -64,7 +65,11 @@ class ProposalCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(freelancer=self.request.user)
+        print("vffffffffffffffffffffffffffffffffffffffffffffff")
+        proposal = serializer.save(freelancer=self.request.user)
+        print(f"New proposal added to the table: Proposal ID - {proposal.id}, Job - {proposal.job.title}, Freelancer - {proposal.freelancer.username}")
+        # Send email notification to the client asynchronously using Celery
+        send_proposal_notification_email_task.delay(proposal.id)
 
 
 proposal_create = ProposalCreateView.as_view()
