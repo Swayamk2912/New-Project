@@ -24,6 +24,8 @@ COPY FreelancerM /app
 COPY wait-for-redis.sh /app/wait-for-redis.sh
 RUN chmod +x /app/wait-for-redis.sh
 
+RUN python manage.py collectstatic --noinput
+
 EXPOSE 8000
 
-CMD ["python", "FreelancerM/manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "FreelancerM.asgi:application"]

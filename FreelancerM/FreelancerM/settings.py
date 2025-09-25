@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-drgy6hx$4-=-*xb@57%^chtniuby3n4ob^kgrx0h4w#3hb63+4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['renitent-juliet-hypersuggestible.ngrok-free.dev']
 
 
 # Application definition
@@ -177,7 +177,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles_collected' # Changed for deployment
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_collected') # Changed for deployment
 STATICFILES_DIRS = [
     BASE_DIR / 'static', # For development static files
 ]
@@ -238,3 +238,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly'
     ]
 }
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://renitent-juliet-hypersuggestible.ngrok-free.dev",
+    "https://renitent-juliet-hypersuggestible.ngrok-free.dev/"
+]

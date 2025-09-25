@@ -2,7 +2,8 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
-from .models import Conversation, Message
+from .models import Conversation, Message, Call
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -21,11 +22,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message_type = text_data_json.get('type')
+        sender_username = text_data_json.get('sender')
 
         if message_type == 'chat_message':
             message_content = text_data_json['message']
-            sender_username = text_data_json['sender']
-
+            
             sender = await self.get_user(sender_username)
             conversation = await self.get_conversation(self.conversation_id)
             
@@ -44,6 +45,68 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'timestamp': new_message.timestamp.isoformat(),
                 }
             )
+        elif message_type == 'call_initiate':
+            sender = await self.get_user(sender_username)
+            conversation = await self.get_conversation(self.conversation_id)
+            receiver = await self.get_receiver(conversation, sender)
+            call = await self.create_call(conversation, sender, receiver)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'call_initiate',
+                    'call_id': call.id,
+                    'sender': sender_username,
+                }
+            )
+        elif message_type in ['call_accept', 'call_reject', 'call_end']:
+            call_id = text_data_json.get('call_id')
+            status = {
+                'call_accept': 'accepted',
+                'call_reject': 'rejected',
+                'call_end': 'ended'
+            }[message_type]
+            await self.update_call_status(call_id, status)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'call_status',
+                    'status': status,
+                    'call_id': call_id,
+                    'sender': sender_username,
+                }
+            )
+        elif message_type in ['webrtc_offer', 'webrtc_answer', 'webrtc_ice_candidate']:
+            payload = text_data_json
+            payload['type'] = message_type
+            payload['sender'] = sender_username
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                payload
+            )
+
+    async def call_initiate(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def call_accept(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def call_reject(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def call_end(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def webrtc_offer(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def webrtc_answer(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def webrtc_ice_candidate(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def call_status(self, event):
+        await self.send(text_data=json.dumps(event))
 
     async def chat_message(self, event):
         message = event['message']
@@ -97,3 +160,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
             receiver=receiver,
             content=content
         )
+
+    @database_sync_to_async
+    def create_call(self, conversation, caller, receiver):
+        return Call.objects.create(
+            conversation=conversation,
+            caller=caller,
+            receiver=receiver
+        )
+
+    @database_sync_to_async
+    def update_call_status(self, call_id, status):
+        try:
+            call = Call.objects.get(id=call_id)
+            call.status = status
+            if status == 'ended':
+                call.end_time = timezone.now()
+            call.save()
+        except Call.DoesNotExist:
+            print(f"Call with id {call_id} does not exist. Cannot update status.")
+            # Optionally, send an error message back to the client
+            # await self.channel_layer.group_send(
+            #     self.room_group_name,
+            #     {
+            #         'type': 'call_error',
+            #         'message': f"Call {call_id} not found.",
+            #         'call_id': call_id,
+            #     }
+            # )
