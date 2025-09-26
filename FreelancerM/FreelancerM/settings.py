@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-drgy6hx$4-=-*xb@57%^chtniuby3n4ob^kgrx0h4w#3hb63+4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['renitent-juliet-hypersuggestible.ngrok-free.dev']
+ALLOWED_HOSTS = ['renitent-juliet-hypersuggestible.ngrok-free.dev','127.0.0.1','localhost']
 
 
 # Application definition
@@ -93,8 +93,8 @@ AUTHENTICATION_BACKENDS = [
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': 'YOUR_GOOGLE_CLIENT_ID',
-            'secret': 'YOUR_GOOGLE_SECRET',
+            'client_id': '901307847965-jgvvqj2l58f5mu126spdio1gtl31hbcc.apps.googleusercontent.com',
+            'secret': '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 ',
             'key_file': None,
         },
         'SCOPE': [
