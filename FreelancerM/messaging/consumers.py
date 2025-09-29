@@ -50,12 +50,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             conversation = await self.get_conversation(self.conversation_id)
             receiver = await self.get_receiver(conversation, sender)
             call = await self.create_call(conversation, sender, receiver)
+
+            # Send to chat room
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'call_initiate',
                     'call_id': call.id,
                     'sender': sender_username,
+                }
+            )
+            # Send to receiver's notification group
+            await self.channel_layer.group_send(
+                f'user_{receiver.id}',
+                {
+                    'type': 'incoming_call',
+                    'caller': sender.username,
+                    'conversation_id': self.conversation_id
                 }
             )
         elif message_type in ['call_accept', 'call_reject', 'call_end']:
@@ -188,3 +199,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
             #         'call_id': call_id,
             #     }
             # )
+
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope["user"]
+        if not self.user.is_authenticated:
+            await self.close()
+        else:
+            self.room_group_name = f'user_{self.user.id}'
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+            await self.accept()
+
+    async def disconnect(self, close_code):
+        if self.user.is_authenticated:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+
+    async def incoming_call(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'incoming_call',
+            'caller': event['caller'],
+            'conversation_id': event['conversation_id']
+        }))

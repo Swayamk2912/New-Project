@@ -264,16 +264,13 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        if (data.type === 'call_accept') {
-            // caller receives this
-            console.log("Call accepted by remote:", data);
-            // nothing special here; answer will arrive as webrtc_answer
-            return;
-        }
-
-        if (data.type === 'call_reject' || data.type === 'call_end') {
-            console.log("Call ended/rejected by remote:", data.type);
-            cleanupCallUI();
+        if (data.type === 'call_status') {
+            console.log("Received call_status:", data.status);
+            if (data.status === 'rejected' || data.status === 'ended') {
+                cleanupCallUI();
+            }
+            // Note: 'accepted' status is implicitly handled by the WebRTC answer flow.
+            // No specific action is needed here for 'accepted'.
             return;
         }
     }
