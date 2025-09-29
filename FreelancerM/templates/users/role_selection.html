@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Select Your Role</h2>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" name="role" value="client">Client</button>
+    <button type="submit" name="role" value="freelancer">Freelancer</button>
+  </form>
+{% endblock %}

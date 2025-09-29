@@ -23,6 +23,19 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from .serializers import UserSerializer
 
+@login_required
+def select_role(request):
+    if request.method == 'POST':
+        role = request.POST.get('role')
+        if role in ['client', 'freelancer']:
+            request.user.role = role
+            request.user.save()
+            if role == 'client':
+                return redirect('users:client_dashboard')
+            else:
+                return redirect('users:freelancer_dashboard')
+    return render(request, 'users/role_selection.html')
+
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -46,10 +59,12 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            if user.role == 'freelancer':
-                return redirect('home')
+            if not user.role:
+                return redirect('users:select_role')
+            elif user.role == 'freelancer':
+                return redirect('users:freelancer_dashboard')
             elif user.role == 'client':
-                return redirect('home') 
+                return redirect('users:client_dashboard')
             else:
                 return redirect('home')
     else:

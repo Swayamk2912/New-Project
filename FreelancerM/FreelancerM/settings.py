@@ -90,6 +90,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Social account configuration
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
@@ -103,7 +104,9 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'AUTH_PARAMS': {
             'access_type': 'offline',
-        }
+        },
+        
+        
     },
     'facebook': {
         'METHOD': 'oauth2',
@@ -242,5 +245,6 @@ REST_FRAMEWORK = {
 
 CSRF_TRUSTED_ORIGINS = [
     "https://renitent-juliet-hypersuggestible.ngrok-free.dev",
-    "https://renitent-juliet-hypersuggestible.ngrok-free.dev/"
+    "https://renitent-juliet-hypersuggestible.ngrok-free.dev/",
+    "http://localhost:8001"
 ]

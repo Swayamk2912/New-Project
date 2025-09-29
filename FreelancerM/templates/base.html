@@ -105,7 +105,7 @@
 
         async function fetchNotifications() {
             try {
-                const response = await fetch('/notifications/list/');
+                const response = await fetch('/notifications/list/api/');
                 const data = await response.json();
                 if (response.ok) {
                     notificationDropdownContent.innerHTML = ''; // Clear existing notifications
