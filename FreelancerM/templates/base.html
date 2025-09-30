@@ -217,10 +217,9 @@
             }
         });
 
-        // Initial fetch and periodic polling
+        // Initial fetch
         document.addEventListener('DOMContentLoaded', function() {
-            fetchNotificationCount(); // Initial fetch
-            setInterval(fetchNotificationCount, 30000); // Poll every 30 seconds
+            fetchNotificationCount();
         });
 
         const notificationSocket = new WebSocket(
@@ -241,6 +240,44 @@
                 document.getElementById('reject-call-btn').onclick = function() {
                     notification.classList.add('hidden');
                 };
+            } else if (data.type === 'general_notification') {
+                // Update notification count
+                fetchNotificationCount();
+                
+                // Add notification to the dropdown
+                const notification = data.notification;
+                const newNotificationDiv = document.createElement('div');
+                newNotificationDiv.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'notification-item');
+                newNotificationDiv.setAttribute('data-notification-id', notification.id);
+
+                const notificationTitle = document.createElement('p');
+                notificationTitle.classList.add('font-semibold');
+                notificationTitle.innerText = notification.verb;
+
+                const notificationMessage = document.createElement('p');
+                notificationMessage.innerText = notification.message;
+
+                const notificationTime = document.createElement('span');
+                notificationTime.classList.add('text-xs', 'text-gray-500');
+                notificationTime.innerText = new Date(notification.created_at).toLocaleString();
+
+                const notificationLink = document.createElement('a');
+                notificationLink.href = notification.url || "#";
+                notificationLink.classList.add('text-purple-600', 'hover:underline');
+                notificationLink.innerText = "View Details";
+
+                newNotificationDiv.appendChild(notificationTitle);
+                newNotificationDiv.appendChild(notificationMessage);
+                newNotificationDiv.appendChild(notificationTime);
+                newNotificationDiv.appendChild(notificationLink);
+                
+                // Remove "No new notifications" if it exists
+                const noNotifications = notificationDropdownContent.querySelector('.no-notifications');
+                if (noNotifications) {
+                    noNotifications.remove();
+                }
+                
+                notificationDropdownContent.prepend(newNotificationDiv);
             }
         };
 

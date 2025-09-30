@@ -227,3 +227,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             'caller': event['caller'],
             'conversation_id': event['conversation_id']
         }))
+
+    async def general_notification(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'general_notification',
+            'notification': event['notification']
+        }))
