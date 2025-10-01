@@ -17,3 +17,5 @@ daphne==4.1.0
 social-auth-app-django[google]
 
 eventlet==0.33.3
+PyJWT==2.9.0
+djangorestframework-simplejwt==5.3.1

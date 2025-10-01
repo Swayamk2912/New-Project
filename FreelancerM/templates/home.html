@@ -20,20 +20,29 @@
     </div>
 </section>
 
-<!-- Google Studio Embed -->
+<!-- Project Insights: Stats -->
 <section class="py-20 bg-gray-100">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-bold text-gray-800">Project Insights</h2>
-            <p class="text-lg text-gray-600 mt-2">Visualize our platform's activity and success stories.</p>
+            <p class="text-lg text-gray-600 mt-2">A quick snapshot of our community.</p>
         </div>
-        <div class="bg-white rounded-lg shadow-2xl p-4">
-            <div class="aspect-w-16 aspect-h-9">
-                <iframe class="rounded-lg" src="https://datastudio.google.com/embed/reporting/1xD7mkm822VdV1RIFipPHyg294hDb8IVH/page/6zXD" frameborder="0" style="border:0" allowfullscreen></iframe>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div class="text-5xl font-extrabold text-indigo-700">{{ total_projects|default:0 }}</div>
+                <div class="mt-2 text-gray-600 font-medium">Projects Completed</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div class="text-5xl font-extrabold text-teal-600">{{ total_clients|default:0 }}</div>
+                <div class="mt-2 text-gray-600 font-medium">Happy Clients</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div class="text-5xl font-extrabold text-purple-700">{{ total_freelancers|default:0 }}</div>
+                <div class="mt-2 text-gray-600 font-medium">Freelancers</div>
             </div>
         </div>
     </div>
-</section>
+    </section>
 
 <!-- Latest Jobs -->
 <section class="py-20 bg-white">

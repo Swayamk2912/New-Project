@@ -25,7 +25,8 @@ def notification_counts(request):
             'unread_messages': unread_messages,
             'unread_proposals': unread_proposals,
             'unread_app_notifications': unread_app_notifications,
-            'total_notifications': unread_messages + unread_proposals + unread_app_notifications
+            # Bell should show proposal notifications only
+            'total_notifications': unread_proposals
         }
     return {
         'unread_messages': 0,

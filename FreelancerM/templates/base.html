@@ -21,7 +21,7 @@
                 <div class="relative">
                     <button id="notification-bell" class="text-gray-600 hover:text-purple-600 focus:outline-none">
                         <i class="fas fa-bell"></i>
-                        <span id="notification-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">0</span>
+                        <span id="notification-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full{% if total_notifications == 0 %} hidden{% endif %}">{{ total_notifications }}</span>
                     </button>
                     <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-20">
                         <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="notification-bell">
@@ -172,7 +172,15 @@
                 const data = await response.json();
                 if (response.ok) {
                     console.log('Notifications marked as read:', data.message);
-                    fetchNotificationCount(); // Update count after marking as read
+                    // Clear dropdown and show empty state
+                    notificationDropdownContent.innerHTML = '';
+                    const noNotificationsLink = document.createElement('a');
+                    noNotificationsLink.href = "#";
+                    noNotificationsLink.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'hover:bg-gray-100', 'no-notifications');
+                    noNotificationsLink.innerText = "No new notifications";
+                    notificationDropdownContent.appendChild(noNotificationsLink);
+                    // Reset badge count immediately
+                    updateNotificationCount(0);
                 } else {
                     console.error('Error marking notifications as read:', data.error);
                 }
@@ -222,10 +230,9 @@
             fetchNotificationCount();
         });
 
+        const wsProto = (window.location.protocol === 'https:') ? 'wss://' : 'ws://';
         const notificationSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/notifications/'
+            wsProto + window.location.host + '/ws/notifications/'
         );
 
         notificationSocket.onmessage = function(e) {
@@ -234,7 +241,7 @@
                 const notification = document.getElementById('incoming-call-notification');
                 document.getElementById('caller-username').innerText = data.caller;
                 const acceptBtn = document.getElementById('accept-call-btn');
-                acceptBtn.href = `/messaging/chat/${data.conversation_id}/`;
+                acceptBtn.href = `/messages/conversation/${data.conversation_id}/?autoAccept=1`;
                 notification.classList.remove('hidden');
 
                 document.getElementById('reject-call-btn').onclick = function() {
@@ -278,6 +285,13 @@
                 }
                 
                 notificationDropdownContent.prepend(newNotificationDiv);
+                // Enforce top 5 items in the dropdown
+                const items = notificationDropdownContent.querySelectorAll('.notification-item');
+                if (items.length > 5) {
+                    for (let i = 5; i < items.length; i++) {
+                        items[i].remove();
+                    }
+                }
             }
         };
 

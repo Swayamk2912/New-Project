@@ -6,6 +6,8 @@ from .models import Notification
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.conf import settings
+from messaging.models import Message
+from proposals.models import Proposal
 
 @csrf_exempt
 def notification_webhook(request):
@@ -55,28 +57,56 @@ def notification_webhook(request):
 
 @login_required
 def unread_notification_count(request):
-    count = Notification.objects.filter(user=request.user, is_read=False).count()
-    return JsonResponse({'unread_count': count})
+    # Only count proposal-related notifications for the bell
+    unread_proposals = 0
+    if hasattr(request.user, 'role') and request.user.role == 'client':
+        unread_proposals = Proposal.objects.filter(
+            job__client=request.user,
+            is_read_by_client=False
+        ).count()
+    elif hasattr(request.user, 'role') and request.user.role == 'freelancer':
+        unread_proposals = Proposal.objects.filter(
+            freelancer=request.user,
+            is_read_by_freelancer=False
+        ).exclude(status='pending').count()
+
+    return JsonResponse({'unread_count': unread_proposals})
 
 from django.shortcuts import render
 
 @login_required
 def notification_list_api(request):
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10] # Get latest 10
+    # Return unread proposal notifications to match the bell count
     notification_data = []
-    for notification in notifications:
-        # Extract message and URL from payload, or use defaults
-        message = notification.payload.get('message', notification.verb)
-        url = notification.payload.get('url', '#')
-        
-        notification_data.append({
-            'id': notification.id,
-            'verb': notification.verb,
-            'message': message,
-            'url': url,
-            'is_read': notification.is_read,
-            'created_at': notification.created_at.isoformat(),
-        })
+    if hasattr(request.user, 'role') and request.user.role == 'client':
+        proposals = Proposal.objects.filter(
+            job__client=request.user,
+            is_read_by_client=False
+        ).order_by('-created_at')[:5]
+        for proposal in proposals:
+            notification_data.append({
+                'id': proposal.id,
+                'verb': 'New proposal',
+                'message': f"{proposal.freelancer.username} proposed on '{proposal.job.title}'",
+                'url': reverse('proposals:job_proposals'),
+                'is_read': proposal.is_read_by_client,
+                'created_at': proposal.created_at.isoformat(),
+            })
+    elif hasattr(request.user, 'role') and request.user.role == 'freelancer':
+        proposals = Proposal.objects.filter(
+            freelancer=request.user,
+            is_read_by_freelancer=False
+        ).exclude(status='pending').order_by('-created_at')[:5]
+        for proposal in proposals:
+            notification_data.append({
+                'id': proposal.id,
+                'verb': 'Proposal update',
+                'message': f"Your proposal on '{proposal.job.title}' was {proposal.status}",
+                'url': reverse('proposals:my_proposals'),
+                'is_read': proposal.is_read_by_freelancer,
+                'created_at': proposal.created_at.isoformat(),
+            })
+
     return JsonResponse({'notifications': notification_data})
 
 @login_required
@@ -89,6 +119,11 @@ def notification_list_page(request):
 def mark_notifications_read(request):
     if request.method == 'POST':
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        # Also mark proposal notifications as read to keep counts in sync with the bell
+        if hasattr(request.user, 'role') and request.user.role == 'client':
+            Proposal.objects.filter(job__client=request.user, is_read_by_client=False).update(is_read_by_client=True)
+        elif hasattr(request.user, 'role') and request.user.role == 'freelancer':
+            Proposal.objects.filter(freelancer=request.user, is_read_by_freelancer=False).exclude(status='pending').update(is_read_by_freelancer=True)
         return JsonResponse({'status': 'success', 'message': 'All notifications marked as read'})
     return JsonResponse({'status': 'error', 'message': 'Only POST requests are allowed'}, status=405)
 

@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+from rest_framework_simplejwt.views import (
+    TokenRefreshView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -14,6 +17,7 @@ urlpatterns = [
     path('payments/', include('payments.urls', namespace='payments')),
     path('api/users/', include('users.api_urls')),
     path('api/jobs/', include('jobs.api_urls')),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('notifications/', include('notifications.urls')), # Include notifications app URLs
     path('accounts/', include('allauth.urls')),
 ]

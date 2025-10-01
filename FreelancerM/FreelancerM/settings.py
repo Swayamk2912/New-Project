@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'jobs',
     'categories',
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'widget_tweaks',
     'proposals', 'contracts', 'messaging', 'payments', 'notifications',
     'channels', # Added for WebSocket support
@@ -234,8 +235,7 @@ CHANNEL_LAYERS = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly'
@@ -248,3 +248,12 @@ CSRF_TRUSTED_ORIGINS = [
     "https://renitent-juliet-hypersuggestible.ngrok-free.dev/",
     "http://localhost:8001"
 ]
+
+# SimpleJWT configuration
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}

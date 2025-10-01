@@ -100,6 +100,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // ---- Template variables (safe) ----
     const conversationId = {{ conversation.id }};
     const currentUser = "{{ request.user.username|escapejs }}";
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoAccept = urlParams.get('autoAccept') === '1';
 
     // ---- WebSocket setup ----
     const proto = (window.location.protocol === 'https:') ? 'wss:' : 'ws:';
@@ -147,6 +149,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     createWebSocket();
+
+    // If navigated here via Accept link, auto-accept the call
+    if (autoAccept) {
+        // Try to show call UI and be ready to answer when offer arrives
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                const localVideo = document.getElementById('local-video');
+                if (localVideo) {
+                    localVideo.srcObject = stream;
+                    localVideo.play().catch(err => console.error("Error playing local video on auto-accept:", err));
+                }
+                createPeerConnectionAndAttachLocal();
+                callModal.show();
+                // If an offer came before we loaded, handle it once WS messages arrive; otherwise, send accept signal
+                safeSend({ type: 'call_accept', call_id: callId });
+            })
+            .catch(err => {
+                console.error("getUserMedia error (auto-accept):", err);
+                alert("Cannot access camera/microphone. Please allow permissions.");
+            });
+    }
 
     function safeSend(obj) {
         obj.sender = currentUser;
