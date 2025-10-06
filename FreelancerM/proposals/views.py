@@ -103,9 +103,11 @@ class JobProposalsView(generics.ListAPIView):
 
 # 5️⃣ Accept Proposal
 @login_required
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
 def accept_proposal(request, pk):
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('proposals:proposal_detail', pk=pk)
+        
     proposal = get_object_or_404(Proposal, pk=pk)
 
     job = proposal.job
@@ -162,9 +164,11 @@ def accept_proposal(request, pk):
 
 # 5️⃣ Reject Proposal
 @login_required
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
 def reject_proposal(request, pk):
+    if request.method != 'POST':
+        messages.error(request, "Invalid request method.")
+        return redirect('proposals:proposal_detail', pk=pk)
+        
     proposal = get_object_or_404(Proposal, pk=pk)
 
     job = proposal.job

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;606;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 d-flex flex-column min-vh-100">
     <!-- Navbar -->
     <nav class="bg-white shadow-md">
         <div class="container mx-auto flex justify-between items-center py-4 px-6">
@@ -63,18 +63,20 @@
     </nav>
 
     <!-- Main Content -->
-    <div id="incoming-call-notification" class="hidden fixed top-5 right-5 bg-white p-4 rounded-lg shadow-lg z-50">
-        <p><strong id="caller-username"></strong> is calling...</p>
-        <div class="mt-2">
-            <a href="#" id="accept-call-btn" class="bg-green-500 text-white px-3 py-1 rounded-lg">Accept</a>
-            <button id="reject-call-btn" class="bg-red-500 text-white px-3 py-1 rounded-lg ml-2">Reject</button>
+    <div class="flex-grow-1">
+        <div id="incoming-call-notification" class="hidden fixed top-5 right-5 bg-white p-4 rounded-lg shadow-lg z-50">
+            <p><strong id="caller-username"></strong> is calling...</p>
+            <div class="mt-2">
+                <a href="#" id="accept-call-btn" class="bg-green-500 text-white px-3 py-1 rounded-lg">Accept</a>
+                <button id="reject-call-btn" class="bg-red-500 text-white px-3 py-1 rounded-lg ml-2">Reject</button>
+            </div>
         </div>
+       
+        {% block content %}{% endblock %}
     </div>
-   
-    {% block content %}{% endblock %}
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white text-center py-6 mt-12">
+    <footer class="bg-gray-900 text-white text-center py-6">
         <p>&copy; 2025 FreelanceHub. All rights reserved.</p>
     </footer>
 
